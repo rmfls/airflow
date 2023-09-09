@@ -1,5 +1,5 @@
 from airflow import DAG
-import pandulum
+import pendulum
 import datetime
 from airflow.operators.empty import EmptyOperator
 
@@ -46,5 +46,5 @@ with DAG(
     t5 >> t4
     [t4, t7] >> t6 >> t8
 
-    
+
 
