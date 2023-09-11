@@ -30,3 +30,5 @@ with DAG(
     )
 
     [t1_orange, t2_avocado] >> send_email_task
+
+
