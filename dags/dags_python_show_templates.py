@@ -15,4 +15,4 @@ with DAG(
         from pprint import pprint
         pprint(kwargs)
 
-    show_templates()
+    python_task = show_templates()
