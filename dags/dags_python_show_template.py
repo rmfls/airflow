@@ -4,7 +4,7 @@ import datetime
 from airflow.decorators import task
 
 with DAG(
-    dag_id="dags_bash_with_template",
+    dag_id="dags_python_show_template",
     schedule="30 9 * * *",
     start_date=pendulum.datetime(2023, 9, 1, tz="Asia/Seoul"),
     catchup=True
