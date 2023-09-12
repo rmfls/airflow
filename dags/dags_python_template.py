@@ -21,4 +21,13 @@ with DAG(
         op_kwargs={'start_date': '{{ data_interval_start | ds }}', 'end_date': '{{ data_interval_end | ds }}'}
     )
 
-    python_t1
+    @task(task_id='python_t2')
+    def python_function2(**kwargs):
+        print(kwargs)
+        print('ds:' + kwargs['ds'])
+        print('ts:' + kwargs['ts'])
+        print('data_interval_start:' + str(kwargs['data_interval_start']))
+        print('data_interval_end:' + str(kwargs['data_interval_end']))
+        print('task_instance:' + str(kwargs['ti']))
+
+    python_t1 >> python_function2()
