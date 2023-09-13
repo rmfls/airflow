@@ -5,7 +5,7 @@ from airflow.decorators import task
 
 with DAG(
     dag_id='dags_python_with_branch_decorator',
-    start_date=datetime(2023, 9, 10, tz="Asia/Seoul"),
+    start_date=datetime(2023, 9, 10),
     schedule=None,
     catchup=False
 ) as dag:
