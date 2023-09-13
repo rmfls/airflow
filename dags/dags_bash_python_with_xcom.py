@@ -33,7 +33,7 @@ with DAG(
         task_id='bash_push',
         bash_command='echo PUSH_START '
                      '{{ ti.xcom_push(key="bash_pushed_1", value=200) }} && '
-                     '{{ ti.xcom_push(key="bash_pushed_2", value=[1,2,3]) }} && '
+                    #  '{{ ti.xcom_push(key="bash_pushed_2", value=[1,2,3]) }} && '
                      'echo PUSH_COMPLETE '
     )
 
@@ -41,10 +41,10 @@ with DAG(
     def python_pull_xcom(**kwargs):
         ti = kwargs['ti']
         status_value = ti.xcom_pull(key='bash_pushed_1')
-        status_list = ti.xcom_pull(key='bash_pushed_2')
+        # status_list = ti.xcom_pull(key='bash_pushed_2')
         return_value = ti.xcom_pull(task_ids='bash_push')
         print('status_value:' + str(status_value))
-        print('status_list:' + str(status_list))
+        # print('status_list:' + str(status_list))
         print('return_value:' + return_value)
 
     bash_push >> python_pull_xcom()
