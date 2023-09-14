@@ -18,6 +18,8 @@ with DAG(
         task_id = 'empty_2'
     )
 
+    empty_1 >> Label('1과 2사이') >> empty_2
+
     empty_3 = EmptyOperator(
         task_id = 'empty_3'
     )
@@ -34,4 +36,4 @@ with DAG(
         task_id = 'empty_6'
     )
 
-    empty_1 >> Label('') >> [empty_2, empty_3, empty_4] >> Label('') >> empty_6
+    empty_2 >> Label('Start Branch') >> [empty_3, empty_4, empty_5] >> Label('End Branch') >> empty_6
