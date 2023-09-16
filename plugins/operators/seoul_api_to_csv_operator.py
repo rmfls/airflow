@@ -51,13 +51,19 @@ class SeoulApiToCsvOperator(BaseOperator):
         if self.base_dt is not None:
             request_url = f'{base_url}/{start_row}/{end_row}/{self.base_dt}'
         response = requests.get(request_url, headers=headers)
+
+         # 로그 추가: API 응답 내용과 상태 코드 및 헤더 정보를 출력
+        self.log.info(f'API Response: {response.text}')
+        self.log.info(f'API Response Status Code: {response.status_code}')
+        self.log.info(f'API Response Headers: {response.headers}')
+    
         contests = json.loads(response.text)
 
         key_nm = list(contests.keys())[0]
         row_data = contests.get(key_nm).get('row')
         row_dt = pd.DataFrame(row_data)
 
-        self.log.info(f'API Response: {response.text}')
+        # self.log.info(f'API Response: {response.text}')
 
         return row_dt
 
