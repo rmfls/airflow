@@ -34,16 +34,11 @@ class SeoulApiToCsvOperator(BaseOperator):
                 start_row = end_row + 1
                 end_row += 1000
         
-        # if not os.path.exists(self.path):
-        #     os.system(f'mkdir -p {self.path}')
+        self.log.info(f'경로 : {os.path}')
 
         if not os.path.exists(self.path):
-            try:
-                os.makedirs(self.path)
-                self.log.info(f'Directory {self.path} created successfully!')
-            except Exception as e:
-                self.log.error(f'Failed to create directory {self.path}. Error: {e}')
-                
+            os.system(f'mkdir -p {self.path}')
+
         total_row_df.to_csv(self.path + '/' + self.file_name, encoding='utf-8', index=False)
 
     def _call_api(self, base_url, start_row, end_row):
