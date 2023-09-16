@@ -57,5 +57,7 @@ class SeoulApiToCsvOperator(BaseOperator):
         row_data = contests.get(key_nm).get('row')
         row_dt = pd.DataFrame(row_data)
 
+        self.log.info(f'API Response: {response.text}')
+
         return row_dt
-        
+
