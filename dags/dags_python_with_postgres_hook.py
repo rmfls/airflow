@@ -26,7 +26,7 @@ with DAG(
     insrt_postgres_with_hook = PythonOperator(
         task_id = 'insrt_postgres_with_hook',
         python_callable=insrt_postgres,
-        op_args={'postgres_conn_id': 'conn-db-postgres-custom'}
+        op_kwargs={'postgres_conn_id': 'conn-db-postgres-custom'}
     )
 
     insrt_postgres_with_hook
