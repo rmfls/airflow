@@ -69,4 +69,3 @@ class SeoulApiToCsvOperator(BaseOperator):
         # self.log.info(f'API Response: {response.text}')
 
         return row_dt
-
