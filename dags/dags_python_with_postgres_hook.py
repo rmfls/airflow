@@ -28,3 +28,5 @@ with DAG(
         python_callable=insrt_postgres,
         op_args={'postgres_conn_id': 'conn-db-postgres-custom'}
     )
+
+    insrt_postgres_with_hook
