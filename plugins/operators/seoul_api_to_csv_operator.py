@@ -34,7 +34,7 @@ class SeoulApiToCsvOperator(BaseOperator):
                 start_row = end_row + 1
                 end_row += 1000
         
-        self.log.info(f'경로 : {os.path}')
+        self.log.info(f'경로 : {self.path}')
 
         if not os.path.exists(self.path):
             os.system(f'mkdir -p {self.path}')
