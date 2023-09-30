@@ -26,8 +26,11 @@ def test_google_sheets_conn():
 
     
     # 특정 시트 읽기 (예: 'Sheet1'라는 이름의 시트)
+    # 첫 번째 워크시트를 선택
+    worksheet = sheet.get_worksheet(0)
+    values = worksheet.get_all_values()
     # sheet = client.open('Your_Spreadsheet_Name').sheet1
-    values = sheet.get_all_values()
+    # values = sheet.get_all_values()
     for row in values:
         print(row)
 
