@@ -18,7 +18,7 @@ with DAG(
         method='POST',
         endpoint='/hdfs_cmd',
         http_conn_id='local_fast_api_conn_id',
-        data=json.dump({
+        data=json.dumps({
             'option': 'check_project',
             'project_name': 'loading_google_sheet'
         }),
