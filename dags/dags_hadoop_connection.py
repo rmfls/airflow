@@ -3,6 +3,7 @@ from airflow import DAG
 from airflow.providers.http.operators.http import  SimpleHttpOperator
 from airflow.decorators import task
 import pendulum
+import json
 
 with DAG(
     dag_id = 'dags_hadoop_connection',
@@ -17,10 +18,10 @@ with DAG(
         method='POST',
         endpoint='/hdfs_cmd',
         http_conn_id='local_fast_api_conn_id',
-        data={
+        data=json.dump({
             'option': 'check_project',
             'project_name': 'loading_google_sheet'
-        },
+        }),
         headers={'Content-Type': 'application/json'}
     )
 
