@@ -1,0 +1,27 @@
+# Package Import
+from airflow import DAG
+from airflow.providers.http.operators.http import  SimpleHttpOperator
+from airflow.decorators import task
+import pendulum
+
+with DAG(
+    dag_id = 'dags_hadoop_connection',
+    start_date=pendulum.datetime(2023, 9, 20, tz='Asia/Seoul'),
+    schedule=None,
+    catchup=False
+) as dag:
+    
+    """ hadoop put 명령 """
+    hdfs_cmd = SimpleHttpOperator(
+        task_id='hdfs_cmd',
+        method='POST',
+        endpoint='/hdfs_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data={
+            'option': 'check_project',
+            'project_name': 'loading_google_sheet'
+        },
+        headers={'Content-Type': 'application/json'}
+    )
+
+    hdfs_cmd
