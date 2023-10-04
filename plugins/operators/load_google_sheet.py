@@ -3,8 +3,8 @@ import gspread
 
 class GoogleSheetsHook(GoogleBaseHook):
     def __init__(self, gcp_conn_id='google_cloud_default', *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.gcp_conn_id = gcp_conn_id
+        super().__init__(gcp_conn_id=gcp_conn_id, *args, **kwargs)
+        # self.gcp_conn_id = gcp_conn_id
 
     def get_service(self):
         """Google Sheets API 서비스 객체를 반환합니다."""
@@ -12,4 +12,4 @@ class GoogleSheetsHook(GoogleBaseHook):
         gc = gspread.authorize(credentials)
         return gc
     
-    
+
