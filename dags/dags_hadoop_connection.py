@@ -17,7 +17,7 @@ with DAG(
         task_id='hdfs_cmd',
         method='POST',
         endpoint='/hdfs_cmd',
-        http_conn_id='local_fast_api_conn_id',
+        http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
         data=json.dumps({
             'option': 'check_project',
             'project_name': 'loading_google_sheet'
