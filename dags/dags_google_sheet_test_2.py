@@ -4,9 +4,13 @@ from datetime import datetime
 import pendulum
 from operators.load_google_sheet import GoogleSheetsHook
 
-def read_sheet():
+# def read_sheet():
+#     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test')
+#     hook.read_google_sheet("KN 광고 관리 문서")
+
+def save_sheet_as_parquet():
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test')
-    hook.read_google_sheet("KN 광고 관리 문서")
+    hook.save_sheets_as_parquet('KN 광고 관리 문서')
 
 
 with DAG(
@@ -19,7 +23,7 @@ with DAG(
     
     read_sheet_task = PythonOperator(
         task_id='read_sheet_task',
-        python_callable=read_sheet
+        python_callable=save_sheet_as_parquet
     )
 
 read_sheet_task
