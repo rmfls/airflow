@@ -20,7 +20,7 @@ def test_google_sheets_conn():
         "https://www.googleapis.com/auth/drive",
         "https://www.googleapis.com/auth/spreadsheets"
     ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name("files/galvanic-ripsaw-399809-a3237f94c91e.json", scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name("files/gcp_json/galvanic-ripsaw-399809-a3237f94c91e.json", scope)
     client = gspread.authorize(creds)
     sheet = client.open("KN 광고 관리 문서")
 
