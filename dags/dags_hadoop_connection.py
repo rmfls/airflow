@@ -33,7 +33,7 @@ with DAG(
         data=json.dumps({
             'option': 'put',
             'project_name': 'loading_google_sheet',
-            'local_path': 'Users/green/airflow/files/gcp/'
+            'local_path': '/Users/green/airflow/files/gcp'
         }),
         headers={'Content-Type': 'application/json'}
     )
