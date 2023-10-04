@@ -2,7 +2,7 @@ from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 import gspread
 
 class GoogleSheetsHook(GoogleBaseHook):
-    def __init__(self, gcp_conn_id='google_sheet_conn_id', *args, **kwargs):
+    def __init__(self, gcp_conn_id='google_cloud_default', *args, **kwargs):
         super().__init__(gcp_conn_id=gcp_conn_id, *args, **kwargs)
         # self.gcp_conn_id = gcp_conn_id
 

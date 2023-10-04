@@ -5,7 +5,7 @@ import pendulum
 from operators.load_google_sheet import GoogleSheetsHook
 
 def read_google_sheet():
-    hook = GoogleSheetsHook(gcp_conn_id='google_sheet_conn_id')
+    hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test')
     service = hook.get_service()
     # 원하는 연산 수행
     sheet = service.open("KN 광고 관리 문서")
