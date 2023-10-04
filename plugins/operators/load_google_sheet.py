@@ -3,23 +3,23 @@ import gspread
 import os
 import pandas as pd
 
-name_mapping = {
-    '단비웅진': 'danbi_woongjin',
-    '매출관리': 'sales_management',
-    '시트': 'sheet',
-    '업종구분': 'business_type',
-    '제안 관리': 'proposal_management',
-    '계약관리': 'contract_management',
-    '캠페인관리': 'campaign_management',
-    '목표및현황': 'target_status',
-    'PUSH 월별집계': 'monthly_push_aggregation',
-    'Push 관리': 'push_management',
-    '계약번호 구성 체계': 'contract_number_structure',
-    '[기타] ': '',
-    '년': 'year'
-}
 
 class GoogleSheetsHook(GoogleBaseHook):
+    NAME_MAPPING = {
+        '단비웅진': 'danbi_woongjin',
+        '매출관리': 'sales_management',
+        '시트': 'sheet',
+        '업종구분': 'business_type',
+        '제안 관리': 'proposal_management',
+        '계약관리': 'contract_management',
+        '캠페인관리': 'campaign_management',
+        '목표및현황': 'target_status',
+        'PUSH 월별집계': 'monthly_push_aggregation',
+        'Push 관리': 'push_management',
+        '계약번호 구성 체계': 'contract_number_structure',
+        '[기타] ': '',
+        '년': 'year'
+    }   
     def __init__(self, gcp_conn_id='google_cloud_default', *args, **kwargs):
         super().__init__(gcp_conn_id=gcp_conn_id, *args, **kwargs)
         # self.gcp_conn_id = gcp_conn_id
@@ -74,7 +74,7 @@ class GoogleSheetsHook(GoogleBaseHook):
     @staticmethod
     def convert_filename(korean_name):
         english_name = korean_name.split('.')[0]
-        for kor, eng in name_mapping.items():
+        for kor, eng in GoogleSheetsHook.NAME_MAPPING.items():
             english_name = english_name.replace(kor, eng)
         return english_name.lower()
 
