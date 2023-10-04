@@ -2,7 +2,7 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 import pendulum
-from plugins.operators.load_google_sheet import GoogleSheetsHook
+from operators.load_google_sheet import GoogleSheetsHook
 
 def read_google_sheet():
     hook = GoogleSheetsHook(gcp_conn_id='google_sheet_conn_id')
