@@ -71,13 +71,14 @@ class GoogleSheetsHook(GoogleBaseHook):
             df.to_parquet(path, index=False)
             print(f"파일 생성 : {english_name}.parquet")
 
-    
-    def convert_filename(self, korean_name):
+    @staticmethod
+    def convert_filename(korean_name):
         english_name = korean_name.split('.')[0]
         for kor, eng in name_mapping.items():
             english_name = english_name.replace(kor, eng)
         return english_name.lower()
 
+    @staticmethod
     def rename_duplicated_columns(df):
         cols = pd.Series(df.columns)
 
