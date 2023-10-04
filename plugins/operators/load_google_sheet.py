@@ -12,4 +12,13 @@ class GoogleSheetsHook(GoogleBaseHook):
         gc = gspread.authorize(credentials)
         return gc
     
+    def read_google_sheet(self, sheet_name):
+        service = self.get_service()
+        sheet = service.open(sheet_name)
+
+        worksheet = sheet.get_worksheet(0)
+        values = worksheet.get_all_values()
+        for row in values:
+            print(row)
+    
 
