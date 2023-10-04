@@ -13,8 +13,8 @@ with DAG(
 ) as dag:
     
     """ hadoop put 명령 """
-    hdfs_cmd = SimpleHttpOperator(
-        task_id='hdfs_cmd',
+    hdfs_mkdir_cmd = SimpleHttpOperator(
+        task_id='hdfs_mkdir_cmd',
         method='POST',
         endpoint='/hdfs_cmd',
         http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
@@ -25,4 +25,17 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    hdfs_cmd
+    hdfs_put_cmd = SimpleHttpOperator(
+        task_id='hdfs_put_cmd',
+        method='POST',
+        endpoint='/hdfs_cmd',
+        http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
+        data=json.dumps({
+            'option': 'put',
+            'project_name': 'loading_google_sheet',
+            'local_path': 'files/gcp/'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
+    hdfs_mkdir_cmd >> hdfs_put_cmd
