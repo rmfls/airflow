@@ -21,7 +21,8 @@ with DAG(
 ) as dag:
     BASE_PATH = Variable.get('hadoop_base_path')
     PROJECT_NAME = "gcp"
-    LOCAL_PATH = os.path.join(os.getcwd(), 'files', PROJECT_NAME)
+    LOCAL_PATH = f"/Users/green/airflow/files/{PROJECT_NAME}/"
+    USER = "green"
 
     hdfs_put_cmd = SimpleHttpOperator(
         task_id='hdfs_put_cmd',
@@ -33,7 +34,7 @@ with DAG(
             'hadoop_base_path': BASE_PATH,
             'project_name': PROJECT_NAME, # 변수로 설정
             'local_path': LOCAL_PATH,
-             'user': 'green' # 스크립트가 돌아가는 상대경로 (변수 설정)
+            'user': USER # 스크립트가 돌아가는 상대경로 (변수 설정)
         }),
         headers={'Content-Type': 'application/json'}
     )
