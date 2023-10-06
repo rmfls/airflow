@@ -1,9 +1,17 @@
 # Package Import
 from airflow import DAG
+from airflow.models import Variable
 from airflow.providers.http.operators.http import  SimpleHttpOperator
 from airflow.decorators import task
 import pendulum
 import json
+import os
+
+'''
+경로 설정을 실제 공용하둡에서 사용하는것과 동일한 형태로 가져가고 싶다.
+'''
+
+
 
 with DAG(
     dag_id = 'dags_hadoop_connection',
@@ -11,19 +19,9 @@ with DAG(
     schedule=None,
     catchup=False
 ) as dag:
-    
-    """ hadoop put 명령 """
-    hdfs_mkdir_cmd = SimpleHttpOperator(
-        task_id='hdfs_mkdir_cmd',
-        method='POST',
-        endpoint='/hdfs_cmd',
-        http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
-        data=json.dumps({
-            'option': 'mkdir',
-            'project_name': 'gcp'
-        }),
-        headers={'Content-Type': 'application/json'}
-    )
+    BASE_PATH = Variable.get('hadoop_base_path')
+    PROJECT_NAME = "gcp"
+    LOCAL_PATH = os.path.join(os.environ.get("PYTHON_PATH"), 'files', PROJECT_NAME)
 
     hdfs_put_cmd = SimpleHttpOperator(
         task_id='hdfs_put_cmd',
@@ -32,10 +30,12 @@ with DAG(
         http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
         data=json.dumps({
             'option': 'put',
-            'project_name': 'gcp',
-            'local_path': '/Users/green/airflow/files/gcp'
+            'hadoop_base_path': BASE_PATH,
+            'project_name': PROJECT_NAME, # 변수로 설정
+            'local_path': LOCAL_PATH,
+             'user': 'green' # 스크립트가 돌아가는 상대경로 (변수 설정)
         }),
         headers={'Content-Type': 'application/json'}
     )
 
-    hdfs_mkdir_cmd >> hdfs_put_cmd
+    hdfs_put_cmd
