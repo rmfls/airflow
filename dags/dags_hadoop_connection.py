@@ -20,7 +20,7 @@ with DAG(
         http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
         data=json.dumps({
             'option': 'mkdir',
-            'project_name': 'loading_google_sheet'
+            'project_name': 'gcp'
         }),
         headers={'Content-Type': 'application/json'}
     )
@@ -32,7 +32,7 @@ with DAG(
         http_conn_id='local_fast_api_conn_id', # 운영서버에서 Admin-Connection 등록 후 변경
         data=json.dumps({
             'option': 'put',
-            'project_name': 'loading_google_sheet',
+            'project_name': 'gcp',
             'local_path': '/Users/green/airflow/files/gcp'
         }),
         headers={'Content-Type': 'application/json'}
