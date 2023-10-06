@@ -21,7 +21,7 @@ with DAG(
 ) as dag:
     BASE_PATH = Variable.get('hadoop_base_path')
     PROJECT_NAME = "gcp"
-    LOCAL_PATH = os.path.join(os.environ.get("PYTHON_PATH"), 'files', PROJECT_NAME)
+    LOCAL_PATH = os.path.join(os.getcwd(), 'files', PROJECT_NAME)
 
     hdfs_put_cmd = SimpleHttpOperator(
         task_id='hdfs_put_cmd',
