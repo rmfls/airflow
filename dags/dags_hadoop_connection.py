@@ -28,6 +28,7 @@ with DAG(
 
     # 하둡에 유저의 경로가 존재하지 않으면 만들어야 함.
     # 위에서 설정한 변수들을 simplehttp operator에 필수 입력 값으로 받아야함.
+    # 그리고 추가적으로 google에서 받아오고 하둡으로 put 하는 작업을 하나의 스크립트로 구현하기 하나의 덱에 여러 테스크 
     hdfs_put_cmd = SimpleHttpOperator(
         task_id='hdfs_put_cmd',
         method='POST',
