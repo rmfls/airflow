@@ -5,6 +5,8 @@ import pandas as pd
 
 
 class GoogleSheetsHook(GoogleBaseHook):
+    BASE_PATH = '/opt/airflow/files'
+
     NAME_MAPPING = {
         '단비웅진': 'danbi_woongjin',
         '매출관리': 'sales_management',
@@ -20,8 +22,13 @@ class GoogleSheetsHook(GoogleBaseHook):
         '[기타] ': '',
         '년': 'year'
     }   
-    def __init__(self, gcp_conn_id='google_cloud_default', *args, **kwargs):
+
+    def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
+        if not project_nm:
+            raise ValueError("The project_nm parameter is required.")
+        
         super().__init__(gcp_conn_id=gcp_conn_id, *args, **kwargs)
+        self.airflow_file_path = os.path.join(self.BASE_PATH, project_nm)
         # self.gcp_conn_id = gcp_conn_id
 
     def get_service(self):
@@ -43,10 +50,10 @@ class GoogleSheetsHook(GoogleBaseHook):
         service = self.get_service()
         spreadsheet = service.open(spreadsheet_name)
         # airflow (docker 저장 경로)
-        airflow_file_path = '/opt/airflow/files/gcp'
+        # airflow_file_path = '/opt/airflow/files/gcp'
 
-        if not os.path.exists(airflow_file_path):
-            os.makedirs(airflow_file_path)
+        if not os.path.exists(self.airflow_file_path):
+            os.makedirs(self.airflow_file_path)
 
         # 모든 워크시트 이름 조회
         worksheet_names = [worksheet.title for worksheet in spreadsheet.worksheets()]
@@ -61,7 +68,7 @@ class GoogleSheetsHook(GoogleBaseHook):
 
             # 매핑 딕셔너리를 사용해 영문 파일명을 가져옴. 
             english_name = self.convert_filename(name)
-            en_directory_path = os.path.join(airflow_file_path, english_name)
+            en_directory_path = os.path.join(self.airflow_file_path, english_name)
 
             if not os.path.exists(en_directory_path):
                 os.makedirs(en_directory_path)
