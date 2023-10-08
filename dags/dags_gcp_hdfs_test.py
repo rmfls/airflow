@@ -14,7 +14,7 @@ default_args = {
 }
 
 def download_google_sheet(**kwargs):
-    project_nm = kwargs['dag_run'].conf.get('project_nm')
+    project_nm = default_args['project_nm']
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
@@ -41,8 +41,7 @@ with DAG(
         task_id='read_sheet_task',
         python_callable=download_google_sheet,
         provide_context=True,
-        dag=dag,
-        default_args=default_args
+        dag=dag
     )
 
     hdfs_put_cmd = SimpleHttpOperator(
