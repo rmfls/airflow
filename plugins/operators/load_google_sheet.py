@@ -2,6 +2,7 @@ from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 import gspread
 import os
 import pandas as pd
+from operators.hive_schema import generate_hive_schema_from_parquet
 
 
 class GoogleSheetsHook(GoogleBaseHook):
@@ -46,7 +47,7 @@ class GoogleSheetsHook(GoogleBaseHook):
         for row in values:
             print(row)
     
-    def save_sheets_as_parquet(self, spreadsheet_name):
+    def save_sheets_as_parquet(self, spreadsheet_name, task_instance=None):
         service = self.get_service()
         spreadsheet = service.open(spreadsheet_name)
         # airflow (docker 저장 경로)
@@ -77,6 +78,12 @@ class GoogleSheetsHook(GoogleBaseHook):
             path = os.path.join(en_directory_path, f'{english_name}.parquet')  # 상대경로
             df.to_parquet(path, index=False)
             print(f"파일 생성 : {english_name}.parquet")
+
+            # parquet의 스키마 정보를 추출하여 xcom_push로 저장
+            if task_instance:
+                schema = generate_hive_schema_from_parquet(path)
+                task_instance.xcom_push(key=f"{english_name}_schema", value=schema)
+                print(f"스키마 생성 : {english_name}")
 
     @staticmethod
     def convert_filename(korean_name):
