@@ -13,9 +13,9 @@ default_args = {
     'project_nm': 'gcp'
 }
 
-def download_google_sheet(project_nm):
+def download_google_sheet(task_instance, project_nm):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
-    hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서')
+    hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=task_instance)
 
 def extract_schema_from_parquet(**context):
     local_path = f"/Users/green/airflow/files/gcp/"
@@ -39,7 +39,8 @@ with DAG(
     read_sheet_task = PythonOperator(
         task_id='read_sheet_task',
         python_callable=download_google_sheet,
-        op_args=[default_args['project_nm']]
+        op_args=[default_args['project_nm']],
+        provide_context=True
     )
 
     hdfs_put_cmd = SimpleHttpOperator(
