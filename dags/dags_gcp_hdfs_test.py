@@ -7,6 +7,7 @@ from datetime import datetime
 import pendulum
 from airflow.models import XCom
 from operators.load_google_sheet import GoogleSheetsHook
+from airflow import settings
 from pathlib import Path
 import logging
 
@@ -20,9 +21,16 @@ def download_google_sheet(**kwargs):
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
 def log_all_xcom_keys(**kwargs):
-    ti = kwargs['ti']
-    xcom_items = ti.xcom_pull(task_ids='read_sheet_task', key=None, include_prior_dates=False) 
-    logging.info(xcom_items)  # 혹은 logging.info(item) 사용
+    # ti = kwargs['ti']
+    # xcom_items = ti.xcom_pull(task_ids='read_sheet_task', key=None, include_prior_dates=False) 
+    # logging.info(xcom_items)  # 혹은 logging.info(item) 사용
+    session = settings.Session()
+    xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, session=session)
+    
+    for xcom in xcom_list:
+        logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
+    
+    session.close()
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
