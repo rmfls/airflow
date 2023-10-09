@@ -21,7 +21,7 @@ def download_google_sheet(**kwargs):
 
 def log_all_xcom_keys(**kwargs):
     ti = kwargs['ti']
-    xcom_items = ti.xcom_pull(task_ids=None, key=None, include_prior_dates=True) 
+    xcom_items = ti.xcom_pull(task_ids=None, key=None, include_prior_dates=False) 
     logging.info(xcom_items)  # 혹은 logging.info(item) 사용
 
 with DAG(
