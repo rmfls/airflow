@@ -18,6 +18,8 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
+def create_hive_tasks(**context):
+    return get_hive_table_tasks(task_ids='read_sheet_task', **context)
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -49,7 +51,12 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    hive_table_tasks = get_hive_table_tasks('read_sheet_task')
+    create_hive_table_task = PythonOperator(
+        task_id='create_hive_table_task',
+        python_callable=create_hive_tasks,
+        provide_context=True,
+        dag=dag
+    )
 
     # # extract schema from parquet
     # extract_schema_task = PythonOperator(
@@ -74,4 +81,4 @@ with DAG(
     # )
 
 
-    read_sheet_task >> hdfs_put_cmd >> hive_table_tasks
+    read_sheet_task >> hdfs_put_cmd >> create_hive_table_task
