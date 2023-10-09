@@ -54,29 +54,31 @@ def get_hive_table_tasks(task_ids, **context):
 
     tasks = []
 
-    for schema_key, schema in all_xcoms:
-        # 스키마 정보를 가져옵니다.
-        schema = context['ti'].xcom_pull(task_ids=task_ids, key=schema_key)
+    print(all_xcoms)
 
-        # Hive API에 전송할 테이터를 구성
-        hive_data = {
-            'option': 'create',
-            'database_name': 'gcp',
-            'table_name': schema_key,
-            'schma': schema,
-            'project_name': 'gcp'
-        }
+    # for schema_key, schema in all_xcoms:
+    #     # 스키마 정보를 가져옵니다.
+    #     schema = context['ti'].xcom_pull(task_ids=task_ids, key=schema_key)
 
-        task = SimpleHttpOperator(
-            task_id=f'create_hive_table_{schema_key}',
-            method='POST',
-            endpoint='/hive_cmd',
-            http_conn_id='local_fast_api_conn_id',
-            data=json.dumps(hive_data),
-            headers={'Content-Type': 'application/json'}
-        )
+    #     # Hive API에 전송할 테이터를 구성
+    #     hive_data = {
+    #         'option': 'create',
+    #         'database_name': 'gcp',
+    #         'table_name': schema_key,
+    #         'schma': schema,
+    #         'project_name': 'gcp'
+    #     }
 
-        tasks.append(task)
+    #     task = SimpleHttpOperator(
+    #         task_id=f'create_hive_table_{schema_key}',
+    #         method='POST',
+    #         endpoint='/hive_cmd',
+    #         http_conn_id='local_fast_api_conn_id',
+    #         data=json.dumps(hive_data),
+    #         headers={'Content-Type': 'application/json'}
+    #     )
+
+    #     tasks.append(task)
     
 
-    return tasks
+    # return tasks
