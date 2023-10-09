@@ -48,15 +48,13 @@ def generate_hive_schema_from_parquet(parquet_path):
 
 def get_hive_table_tasks(task_ids, **context):
     ti = context['ti']
-    session = context['session']
 
-    # XCom의 모든 키를 가져옵니다.
-    all_keys = session.query(XCom.key).filter(XCom.task_id==task_ids, XCom.dag_id==ti.dag_id).all()
-    all_keys = [key[0] for key in all_keys]
-    
+    # XCom의 모든 키와 값을 가져옵니다.
+    all_xcoms = ti.xcom_pull(task_ids=task_ids, key=None)
+
     tasks = []
 
-    for schema_key in all_keys:
+    for schema_key, schema in all_xcoms:
         # 스키마 정보를 가져옵니다.
         schema = context['ti'].xcom_pull(task_ids=task_ids, key=schema_key)
 
