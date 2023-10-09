@@ -20,18 +20,38 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
-def log_all_xcom_keys(**kwargs):
-    # ti = kwargs['ti']
-    # xcom_items = ti.xcom_pull(task_ids='read_sheet_task', key=None, include_prior_dates=False) 
-    # logging.info(xcom_items)  # 혹은 logging.info(item) 사용
-    session = settings.Session()
-    execution_date = kwargs['execution_date']
-    xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
+def generate_hive_task(schema_key, dag):
+    # schema_key에서 실제 테이블 이름을 가져옵니다.
+    table_name = schema_key.replace("_schema", "")
+
+    hive_data = {
+        "option": "create",
+        "database_name": "gcp",
+        "table_name": table_name,
+        # 이전에 XCom에 저장한 키로 스키마 값을 가져옵니다.
+        "schema": "{{ ti.xcom_pull(task_ids='read_sheet_task', key='" + schema_key + "') }}",
+        "project_name": "gcp"
+    }
+
+    return SimpleHttpOperator(
+        task_id=f'create_hive_table_{table_name}',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps(hive_data),
+        headers={'Content-Type': 'application/json'},
+        dag=dag
+    )
+
+# def log_all_xcom_keys(**kwargs):
+#     session = settings.Session()
+#     execution_date = kwargs['execution_date']
+#     xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
     
-    for xcom in xcom_list:
-        logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
+#     for xcom in xcom_list:
+#         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
     
-    session.close()
+#     session.close()
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -63,14 +83,14 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    log_xcom_task = PythonOperator(
-        task_id='log_all_xcom_keys',
-        python_callable=log_all_xcom_keys,
-        provide_context=True,
-        dag=dag
-    )
+    # XCom에서 스키마 키 목록을 가져옵니다.
+    schema_keys = [xcom.key for xcom in XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, session=settings.Session())]
+    hive_tasks = []
 
-    read_sheet_task >> hdfs_put_cmd >> log_xcom_task
+    # 각 스키마 키에 대한 SimpleHttpOperator 작업을 동적으로 생성합니다.
+    for schema_key in schema_keys:
+        hive_task = generate_hive_task(schema_key, dag)
+        hive_tasks.append(hive_task)
 
-    # XCom에서 모든 키 가져오기
-    # all_schema_keys = [xcom.key for xcom in XCom.get_many(dag_ids=dag.dag_id, key="*_schema")]
+
+    read_sheet_task >> hdfs_put_cmd >> hive_tasks
