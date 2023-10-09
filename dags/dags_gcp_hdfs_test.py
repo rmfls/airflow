@@ -66,4 +66,4 @@ with DAG(
         dag=dag
     )
 
-    hdfs_put_cmd >> log_all_xcom_keys
+    hdfs_put_cmd >> log_xcom_task
