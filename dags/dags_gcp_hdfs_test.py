@@ -43,15 +43,19 @@ def generate_hive_task(schema_key, dag):
         dag=dag
     )
 
-# def log_all_xcom_keys(**kwargs):
-#     session = settings.Session()
-#     execution_date = kwargs['execution_date']
-#     xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
+def log_all_xcom_keys(**kwargs):
+    session = settings.Session()
+    execution_date = kwargs['execution_date']
+    xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
     
-#     for xcom in xcom_list:
-#         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
+    schema_key = [xcom.key for xcom in xcom_list]
+
+    for xcom in xcom_list:
+        logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
     
-#     session.close()
+    return schema_key
+    
+    # session.close()
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -84,7 +88,15 @@ with DAG(
     )
 
     # XCom에서 스키마 키 목록을 가져옵니다.
-    schema_keys = [xcom.key for xcom in XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, session=settings.Session())]
+    log_xcom_task = PythonOperator(
+        task_id='log_all_xcom_keys',
+        python_callable=log_all_xcom_keys,
+        provide_context=True,
+        dag=dag
+    )
+
+    # 스키마 키를 반환받는 것을 기대합니다.
+    schema_keys = log_xcom_task.output
     hive_tasks = []
 
     # 각 스키마 키에 대한 SimpleHttpOperator 작업을 동적으로 생성합니다.
@@ -92,5 +104,4 @@ with DAG(
         hive_task = generate_hive_task(schema_key, dag)
         hive_tasks.append(hive_task)
 
-
-    read_sheet_task >> hdfs_put_cmd >> hive_tasks
+    read_sheet_task >> hdfs_put_cmd >> log_xcom_task >> hive_tasks
