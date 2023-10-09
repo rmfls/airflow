@@ -1,6 +1,8 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.operators.branch import PythonBranchOperator
+
 import json
 from airflow.operators.python import PythonOperator
 from datetime import datetime
@@ -20,29 +22,6 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
-def generate_hive_task(schema_key, dag):
-    # schema_key에서 실제 테이블 이름을 가져옵니다.
-    table_name = schema_key.replace("_schema", "")
-
-    hive_data = {
-        "option": "create",
-        "database_name": "gcp",
-        "table_name": table_name,
-        # 이전에 XCom에 저장한 키로 스키마 값을 가져옵니다.
-        "schema": "{{ ti.xcom_pull(task_ids='read_sheet_task', key='" + schema_key + "') }}",
-        "project_name": "gcp"
-    }
-
-    return SimpleHttpOperator(
-        task_id=f'create_hive_table_{table_name}',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps(hive_data),
-        headers={'Content-Type': 'application/json'},
-        dag=dag
-    )
-
 def log_all_xcom_keys(**kwargs):
     session = settings.Session()
     execution_date = kwargs['execution_date']
@@ -52,10 +31,8 @@ def log_all_xcom_keys(**kwargs):
 
     for xcom in xcom_list:
         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
-    
-    return schema_key
-    
-    # session.close()
+
+    session.close()
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -95,13 +72,4 @@ with DAG(
         dag=dag
     )
 
-    # 스키마 키를 반환받는 것을 기대합니다.
-    schema_keys = log_xcom_task.output
-    hive_tasks = []
-
-    # 각 스키마 키에 대한 SimpleHttpOperator 작업을 동적으로 생성합니다.
-    for schema_key in schema_keys:
-        hive_task = generate_hive_task(schema_key, dag)
-        hive_tasks.append(hive_task)
-
-    read_sheet_task >> hdfs_put_cmd >> log_xcom_task >> hive_tasks
+    read_sheet_task >> hdfs_put_cmd >> log_xcom_task
