@@ -25,7 +25,8 @@ def log_all_xcom_keys(**kwargs):
     # xcom_items = ti.xcom_pull(task_ids='read_sheet_task', key=None, include_prior_dates=False) 
     # logging.info(xcom_items)  # 혹은 logging.info(item) 사용
     session = settings.Session()
-    xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, session=session)
+    execution_date = kwargs['execution_date']
+    xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
     
     for xcom in xcom_list:
         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
