@@ -50,7 +50,7 @@ def get_hive_table_tasks(task_ids, **context):
     ti = context['ti']
 
     # XCom의 모든 키와 값을 가져옵니다.
-    all_xcoms = ti.xcom_pull(task_ids=task_ids, key=None)
+    all_xcoms = ti.xcom_list_keys(task_ids=task_ids)
 
     tasks = []
 
