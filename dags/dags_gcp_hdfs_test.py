@@ -1,8 +1,6 @@
 from airflow import DAG
 from airflow.models import Variable
 from airflow.providers.http.operators.http import SimpleHttpOperator
-from airflow.operators.branch import PythonBranchOperator
-
 import json
 from airflow.operators.python import PythonOperator
 from datetime import datetime
