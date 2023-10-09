@@ -1,6 +1,7 @@
 import pyarrow.parquet as pq
 import requests
 from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.models import XCom
 import json
 
 
@@ -46,9 +47,13 @@ def generate_hive_schema_from_parquet(parquet_path):
     return ', '.join(columns)
 
 def get_hive_table_tasks(task_ids, **context):
-    # XCom의 모든 키를 가져옵니다.
-    all_keys = context['ti'].xcom_list_keys(task_ids=task_ids)
+    ti = context['ti']
+    session = context['session']
 
+    # XCom의 모든 키를 가져옵니다.
+    all_keys = session.query(XCom.key).filter(XCom.task_id==task_ids, XCom.dag_id==ti.dag_id).all()
+    all_keys = [key[0] for key in all_keys]
+    
     tasks = []
 
     for schema_key in all_keys:
