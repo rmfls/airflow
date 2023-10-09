@@ -5,8 +5,8 @@ import json
 from airflow.operators.python import PythonOperator
 from datetime import datetime
 import pendulum
+from airflow.models import XCom
 from operators.load_google_sheet import GoogleSheetsHook
-from operators.hive_schema import get_hive_table_tasks
 from pathlib import Path
 
 default_args = {
@@ -18,8 +18,10 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
-def create_hive_tasks(**context):
-    return get_hive_table_tasks(task_ids='read_sheet_task', **context)
+def log_all_xcom_keys(**kwargs):
+    all_keys = [xcom.key for xcom in XCom.get_many(dag_ids=kwargs['dag'].dag_id)]
+    for key in all_keys:
+        print(key)
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -51,34 +53,16 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    create_hive_table_task = PythonOperator(
-        task_id='create_hive_table_task',
-        python_callable=create_hive_tasks,
+    read_sheet_task >> hdfs_put_cmd
+
+    # XCom에서 모든 키 가져오기
+    all_schema_keys = [xcom.key for xcom in XCom.get_many(dag_ids=dag.dag_id, key="*_schema")]
+
+    log_xcom_task = PythonOperator(
+        task_id='log_all_xcom_keys',
+        python_callable=log_all_xcom_keys,
         provide_context=True,
         dag=dag
     )
 
-    # # extract schema from parquet
-    # extract_schema_task = PythonOperator(
-    #     task_id='extract_schema_task',
-    #     python_callable=extract_schema_from_parquet,
-    #     provide_context=True
-    # )
-
-    # create_hive_table_cmd = SimpleHttpOperator(
-    #     task_id='create_hive_table_cmd',
-    #     method='POST',
-    #     endpoint='/hive_cmd',
-    #     http_conn_id='local_fast_api_conn_id',
-    #     data=json.dumps({
-    #         'option': 'create',
-    #         'database_name': 'gcp',
-    #         'table_name': '',
-    #         'schema': "{{ ti.xcom_pull(task_ids='extract_schema_from_parquet', key='hive_schema')}}",
-    #         'project_name': 'gcp'
-    #     }),
-    #     headers={'Content-Type': 'application/json'}
-    # )
-
-
-    read_sheet_task >> hdfs_put_cmd >> create_hive_table_task
+    hdfs_put_cmd >> log_all_xcom_keys
