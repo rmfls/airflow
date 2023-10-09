@@ -19,9 +19,10 @@ def download_google_sheet(**kwargs):
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
 def log_all_xcom_keys(**kwargs):
-    all_keys = [xcom.key for xcom in XCom.get_many(dag_ids=kwargs['dag'].dag_id)]
-    for key in all_keys:
-        print(key)
+    ti = kwargs['ti']
+    xcom_items = ti.xcom_pull(task_ids=None, key=None, include_prior_dates=True) 
+    for item in xcom_items:
+        print(item)  # 혹은 logging.info(item) 사용
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -56,7 +57,7 @@ with DAG(
     read_sheet_task >> hdfs_put_cmd
 
     # XCom에서 모든 키 가져오기
-    all_schema_keys = [xcom.key for xcom in XCom.get_many(dag_ids=dag.dag_id, key="*_schema")]
+    # all_schema_keys = [xcom.key for xcom in XCom.get_many(dag_ids=dag.dag_id, key="*_schema")]
 
     log_xcom_task = PythonOperator(
         task_id='log_all_xcom_keys',
