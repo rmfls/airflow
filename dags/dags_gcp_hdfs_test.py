@@ -6,7 +6,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime
 import pendulum
 from operators.load_google_sheet import GoogleSheetsHook
-from operators.hive_schema import generate_hive_schema_from_parquet
+from operators.hive_schema import get_hive_table_tasks
 from pathlib import Path
 
 default_args = {
@@ -17,16 +17,6 @@ def download_google_sheet(**kwargs):
     project_nm = default_args['project_nm']
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
-
-# def extract_schema_from_parquet(**context):
-#     local_path = f"/Users/green/airflow/files/gcp/"
-#     parquet_files = [f for f in Path(local_path).glob('*.parquet')]
-
-#     if not parquet_files:
-#         raise Exception('No parquet files found!')
-    
-#     schema = generate_hive_schema_from_parquet(parquet_files[0])
-#     context['ti'].xcom_push(key='hive_schema', value=schema)
 
 
 with DAG(
@@ -59,6 +49,8 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    hive_table_tasks = get_hive_table_tasks('read_sheet_task')
+
     # # extract schema from parquet
     # extract_schema_task = PythonOperator(
     #     task_id='extract_schema_task',
@@ -82,4 +74,4 @@ with DAG(
     # )
 
 
-    read_sheet_task >> hdfs_put_cmd 
+    read_sheet_task >> hdfs_put_cmd >> hive_table_tasks
