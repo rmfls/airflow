@@ -127,7 +127,9 @@ with DAG(
         http_conn_id='local_fast_api_conn_id',
         data=json.dumps({
             'option': 'drop',
-            'table_name': '01_contactlist_schema'
+            'table_name': '01_contactlist_schema',
+            'database_name': 'gcp',
+            'project_name': 'gcp'
         }),
         headers={'Content-Type': 'application/json'}
     )
