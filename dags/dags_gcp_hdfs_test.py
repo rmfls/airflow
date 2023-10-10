@@ -20,17 +20,49 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
-def log_all_xcom_keys(**kwargs):
+# def log_all_xcom_keys(**kwargs):
+#     session = settings.Session()
+#     execution_date = kwargs['execution_date']
+#     xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
+    
+#     schema_key = [xcom.key for xcom in xcom_list]
+
+#     for xcom in xcom_list:
+#         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
+
+#     session.close()
+
+def create_hive_table_from_xcom(**kwargs):
     session = settings.Session()
     execution_date = kwargs['execution_date']
     xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
-    
-    schema_key = [xcom.key for xcom in xcom_list]
 
     for xcom in xcom_list:
         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
 
+        schema = ', '.join(xcom.value)
+
+        hive_create_table_task = SimpleHttpOperator(
+            task_id=f'hive_create_table_task_{xcom.key}',
+            method='POST',
+            endpoint='/hive_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'create',
+                'database_name': 'gcp',
+                'table_name': f'{xcom.key}',
+                'schema': schema,
+                'project_name': 'gcp'
+            }),
+            headers={'Content-Type': 'application/json'},
+            dag=dag
+        )
+
+        # 이 연산자를 실행하도록 작업 흐름도 설정
+        hive_create_table_task.execute(context=kwargs)
+
     session.close()
+
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -63,11 +95,11 @@ with DAG(
     )
 
     # XCom에서 스키마 키 목록을 가져옵니다.
-    log_xcom_task = PythonOperator(
-        task_id='log_all_xcom_keys',
-        python_callable=log_all_xcom_keys,
+    create_hive_task = PythonOperator(
+        task_id='create_hive_task',
+        python_callable=create_hive_table_from_xcom,
         provide_context=True,
         dag=dag
     )
 
-    read_sheet_task >> hdfs_put_cmd >> log_xcom_task
+    read_sheet_task >> hdfs_put_cmd >> create_hive_task
