@@ -120,6 +120,17 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    hive_drop_cmd = SimpleHttpOperator(
+        task_id='hive_drop_cmd_01_contactlist_schema',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'drop',
+            'table_name': '01_contactlist_schema'
+        })
+    )
+
     hive_create_cmd = SimpleHttpOperator(
         task_id='hive_create_cmd_01_contactlist_schema',
         method='POST',
@@ -135,14 +146,7 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    sample_task = PythonOperator(
-        task_id='sample_task',
-        python_callable=your_function_or_operator,
-        provide_context=True,
-        dag=dag
-    )
-
-    read_sheet_task >> hdfs_put_cmd >> sample_task >> hive_create_cmd
+    read_sheet_task >> hdfs_put_cmd  >> hive_drop_cmd >> hive_create_cmd
 
     # session = settings.Session()
     # execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
