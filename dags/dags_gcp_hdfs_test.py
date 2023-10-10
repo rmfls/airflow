@@ -143,7 +143,7 @@ with DAG(
             'option': 'create',
             'database_name': 'gcp',
             'project_name': 'gcp',
-            'table_name': '01_contactlist_schema',
+            'table_name': '01_contactlist',
             'schema': '{{ ti.xcom_pull(key=\'01_contactlist_schema\') }}'
         }),
         headers={'Content-Type': 'application/json'}
