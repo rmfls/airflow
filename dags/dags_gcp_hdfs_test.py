@@ -82,6 +82,13 @@ def create_hive_table_task_for_xcom(xcom, dag):
         dag=dag
     )
 
+def your_function_or_operator(**kwargs):
+    # ... 기존 코드 ...
+
+    # xcom에서 값을 가져와서 로그에 기록
+    value_from_xcom = kwargs['ti'].xcom_pull(key="01_contactlist_schema")
+    logging.info(f"Value from XCom: {value_from_xcom}")
+
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -128,7 +135,14 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    read_sheet_task >> hdfs_put_cmd >> hive_create_cmd
+    sample_task = PythonOperator(
+        task_id='sample_task',
+        python_callable=your_function_or_operator,
+        provide_context=True,
+        dag=dag
+    )
+
+    read_sheet_task >> hdfs_put_cmd >> sample_task
 
     # session = settings.Session()
     # execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
