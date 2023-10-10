@@ -128,7 +128,8 @@ with DAG(
         data=json.dumps({
             'option': 'drop',
             'table_name': '01_contactlist_schema'
-        })
+        }),
+        headers={'Content-Type': 'application/json'}
     )
 
     hive_create_cmd = SimpleHttpOperator(
