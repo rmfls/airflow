@@ -149,7 +149,7 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    read_sheet_task >> hdfs_put_cmd  >> hive_drop_cmd 
+    read_sheet_task >> hdfs_put_cmd  >> hive_drop_cmd >> hive_create_cmd
 
     # session = settings.Session()
     # execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
