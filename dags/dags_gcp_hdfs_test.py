@@ -123,7 +123,7 @@ with DAG(
             'database_name': 'gcp',
             'project_name': 'gcp',
             'table_name': '01_contactlist_schema',
-            'schema': ' {{ ti.xcom_pull(key="01_contactlist_schema") }}'
+            'schema': '{{ ti.xcom_pull(key="01_contactlist_schema") }}'
         }),
         headers={'Content-Type': 'application/json'}
     )
