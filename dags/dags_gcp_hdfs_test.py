@@ -130,7 +130,7 @@ with DAG(
             'database_name': 'gcp',
             'project_name': 'gcp',
             'table_name': '01_contactlist_schema',
-            'schema': '{{ ti.xcom_pull(key="01_contactlist_schema") }}'
+            'schema': '{{ ti.xcom_pull(key=\'01_contactlist_schema\') }}'
         }),
         headers={'Content-Type': 'application/json'}
     )
@@ -142,7 +142,7 @@ with DAG(
         dag=dag
     )
 
-    read_sheet_task >> hdfs_put_cmd >> sample_task
+    read_sheet_task >> hdfs_put_cmd >> sample_task >> hive_create_cmd
 
     # session = settings.Session()
     # execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
