@@ -113,17 +113,32 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    read_sheet_task >> hdfs_put_cmd 
+    hive_create_cmd = SimpleHttpOperator(
+        task_id='hive_create_cmd_01_contactlist_schema',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'database_name': 'gcp',
+            'project_name': 'gcp',
+            'table_name': '01_contactlist_schema',
+            'schema': ' {{ ti.xcom_pull(key="01_contactlist_schema") }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
 
-    session = settings.Session()
-    execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
-    xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
+    read_sheet_task >> hdfs_put_cmd >> hive_create_cmd
 
-    for xcom in xcom_list:
-        hive_create_table_task = create_hive_table_task_for_xcom(xcom, dag)
-        hdfs_put_cmd >> hive_create_table_task
+    # session = settings.Session()
+    # execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
+    # xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
+
+    # for xcom in xcom_list:
+    #     hive_create_table_task = create_hive_table_task_for_xcom(xcom, dag)
+    #     hdfs_put_cmd >> hive_create_table_task
     
-    session.close()
+    # session.close()
 
     
 
