@@ -58,7 +58,6 @@ with DAG(
         http_conn_id='local_fast_api_conn_id',
         data=json.dumps({
             'option': 'create',
-            'database_name': 'gcp',
             'project_name': 'gcp',
             'table_name': '01_contactlist',
             'schema': '{{ ti.xcom_pull(key=\'01_contactlist_schema\') }}'
@@ -73,7 +72,6 @@ with DAG(
         http_conn_id='local_fast_api_conn_id',
         data=json.dumps({
             'option': 'create',
-            'database_name': 'gcp',
             'project_name': 'gcp',
             'table_name': '02_contract_management',
             'schema': '{{ ti.xcom_pull(key=\'02_contract_management_schema\') }}'
