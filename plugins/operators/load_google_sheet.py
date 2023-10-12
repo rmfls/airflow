@@ -36,6 +36,18 @@ class GoogleSheetsHook(GoogleBaseHook):
         "f/u": "f_u"
     }
 
+    COLUMN_NAME_MAPPING_02 = {
+        "계약번호": "contract_number",
+        "계약종류": "contract_type",
+        "계약일": "contract_date",
+        "대상분류": "target_category",
+        "계약대상": "contract_target",
+        "정산기간(일)": "settlement_period_days",
+        "메모": "memo",
+        "관련자료": "related_data",
+        "완료 및 보관 여부 (Y/N)": "completion_and_storage_status"
+    }   
+
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
             raise ValueError("The project_nm parameter is required.")
@@ -123,7 +135,7 @@ class GoogleSheetsHook(GoogleBaseHook):
         df.columns = cols
 
     def data_preprocessing_1(self, name, worksheet):
-        if name in ['01_ContactList']:
+        if name == '01_ContactList':
             columns = worksheet.get('B4:O4')[0]
             values = worksheet.get('B5:O')[0:]
             df = pd.DataFrame(values, columns=columns)
@@ -136,6 +148,21 @@ class GoogleSheetsHook(GoogleBaseHook):
             for col in ['no']:
                 if col in df.columns:
                     df[col] = df[col].astype(int)
+        
+        elif name == '02_계약관리':
+            columns = worksheet.get('B4:O4')[0]
+            values = worksheet.get('B5:O')[0:]
+            df = pd.DataFrame(values, columns=columns)
+
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_02[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_02}
+            df.rename(columns=to_rename, inplace=True)
+
+            # contract_number 컬럼을 int로 변환
+            for col in ['contract_number']:
+                if col in df.columns:
+                    df[col] = df[col].astype(int)
+
         else:
             data = worksheet.get_all_values()
             df = pd.DataFrame(data[1:], columns=data[0])
