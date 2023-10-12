@@ -118,8 +118,8 @@ with DAG(
             'project_name': 'gcp',
             'table_name': '03_campaign_management',
             'schema': '{{ ti.xcom_pull(key=\'03_campaign_management_schema\') }}'
-        }),
-        headers={'Content-Type': 'application/json'}
+        }, ensure_ascii=False).encode('utf-8'),
+        headers={'Content-Type': 'application/json; charset=utf-8'}
     )
 
 
