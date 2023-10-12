@@ -20,32 +20,6 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
-# def create_hive_table_task_for_xcom(xcom, dag):
-#     schema = xcom.value
-
-#     return SimpleHttpOperator(
-#         task_id=f'hive_create_table_task_{xcom.key}',
-#         method='POST',
-#         endpoint='/hive_cmd',
-#         http_conn_id='local_fast_api_conn_id',
-#         data=json.dumps({
-#             'option': 'create',
-#             'database_name': 'gcp',
-#             'project_name': 'gcp',
-#             'table_name': f'{xcom.key}',
-#             'schema': schema
-#         }),
-#         headers={'Content-Type': 'application/json'},
-#         dag=dag
-#     )
-
-# def your_function_or_operator(**kwargs):
-#     # ... 기존 코드 ...
-
-#     # xcom에서 값을 가져와서 로그에 기록
-#     value_from_xcom = kwargs['ti'].xcom_pull(key="01_contactlist_schema")
-#     logging.info(f"Value from XCom: {value_from_xcom}")
-
 
 with DAG(
     dag_id='dags_gcp_hdfs_test',
@@ -107,20 +81,5 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    hive_create_cmd_03 = SimpleHttpOperator(
-        task_id='hive_create_cmd_03',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'create',
-            'database_name': 'gcp',
-            'project_name': 'gcp',
-            'table_name': '03_campaign_management',
-            'schema': '{{ ti.xcom_pull(key=\'03_campaign_management_schema\') }}'
-        }, ensure_ascii=False).encode('utf-8'),
-        headers={'Content-Type': 'application/json; charset=utf-8'}
-    )
 
-
-    read_sheet_task >> hdfs_put_cmd >> [hive_create_cmd_01, hive_create_cmd_02, hive_create_cmd_03]
+    read_sheet_task >> hdfs_put_cmd >> [hive_create_cmd_01, hive_create_cmd_02]
