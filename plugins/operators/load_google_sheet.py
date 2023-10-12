@@ -32,7 +32,8 @@ class GoogleSheetsHook(GoogleBaseHook):
         "현재 상태": "current_status",
         "5월프로모션": "may_promotion",
         "비고": "remarks",
-        "계약번호": "contract_number"
+        "계약번호": "contract_number",
+        "f/u": "f_u"
     }
 
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
