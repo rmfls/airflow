@@ -60,7 +60,7 @@ with DAG(
             'option': 'create',
             'project_name': 'gcp',
             'table_name': '01_contactlist',
-            'schema': '{{ ti.xcom_pull(key=\'01_contactlist_schema\') }}'
+            'schema': '{{ ti.xcom_pull(key=\'01_contactlist\') }}'
         }),
         headers={'Content-Type': 'application/json'}
     )
@@ -74,10 +74,24 @@ with DAG(
             'option': 'create',
             'project_name': 'gcp',
             'table_name': '02_contract_management',
-            'schema': '{{ ti.xcom_pull(key=\'02_contract_management_schema\') }}'
+            'schema': '{{ ti.xcom_pull(key=\'02_contract_management\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
+    hive_create_cmd_03 = SimpleHttpOperator(
+        task_id='hive_create_cmd_03',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'project_name': 'gcp',
+            'table_name': '03_campaign_management',
+            'schema': '{{ ti.xcom_pull(key=\'03_campaign_management\') }}'
         }),
         headers={'Content-Type': 'application/json'}
     )
 
 
-    read_sheet_task >> hdfs_put_cmd >> [hive_create_cmd_01, hive_create_cmd_02]
+    read_sheet_task >> hdfs_put_cmd >> [hive_create_cmd_01, hive_create_cmd_02, hive_create_cmd_03]

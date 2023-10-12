@@ -46,7 +46,35 @@ class GoogleSheetsHook(GoogleBaseHook):
         "메모": "memo",
         "관련자료": "related_data",
         "완료 및 보관 여부 (Y/N)": "completion_and_storage_status"
-    }   
+    }  
+
+    COLUMN_NAME_MAPPING_03 = {
+        "계약번호": "contract_number", # int
+        "캠페인번호": "campaign_number",
+        "캠페인명": "campaign_name",
+        "광고주": "advertiser",
+        "대행사": "agency",
+        "렙사": "representative",
+        "담당자": "manager",
+        "Placement": "placement",
+        "집행금액": "execution_amount", # 결측치 처리(0), int
+        "수수료율": "commission_rate",
+        "수익": "profit", # 결측치 처리(0), int
+        "요청일(수주일)": "request_date",
+        "게재시작일": "publish_start_date",
+        "게재종료일": "publish_end_date",
+        "계산서발행일 ": "invoice_date",
+        "정산일(1차)": "first_settlement_date",
+        "업종대분류": "major_business_category",
+        "업종중분류": "sub_business_category",
+        "정산기간(일)": "settlement_period_days",
+        "캠페인 완료": "campaign_completion",
+        "세금계산서 발행": "tax_invoice_issued",
+        "정산 완료": "settlement_completed",
+        "관련 자료": "related_documents",
+        "비고": "remarks",
+        "Targeting": "targeting"
+    }    
 
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
@@ -111,7 +139,7 @@ class GoogleSheetsHook(GoogleBaseHook):
             # parquet의 스키마 정보를 추출하여 xcom_push로 저장
             if task_instance:
                 schema = generate_hive_schema_from_parquet(path)
-                task_instance.xcom_push(key=f"{english_name}_schema", value=schema)
+                task_instance.xcom_push(key=f"{english_name}", value=schema)
                 print(f"스키마 생성 : {english_name}")
 
     @staticmethod
@@ -162,6 +190,27 @@ class GoogleSheetsHook(GoogleBaseHook):
             for col in ['contract_number']:
                 if col in df.columns:
                     df[col] = df[col].astype(int)
+
+        elif name == '03_캠페인관리':
+            columns = worksheet.get('A1:AB')[0]
+            values = worksheet.get('A2:AB')[0:]
+            df = pd.DataFrame(values, columns=columns)
+
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_03[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_03}
+            df.rename(columns=to_rename, inplace=True)
+
+            # contract_number 컬럼을 int로 변환
+            for col in ['contract_number']:
+                if col in df.columns:
+                    df[col] = df[col].astype(int)
+
+            # execution_amount, profit 컬럼 결측치 처리, int로 변환
+            for col in ['execution_amount', 'profit']:
+                if col in df.columns:
+                    df[col].fillna('₩0', inplace=True)
+                    # 통화 기호와 쉼표 제거 후 int로 변환
+                    df[col] = pd.to_numeric(df[col].str.replace('[₩,]', '', regex=True), errors='coerce')
 
         else:
             data = worksheet.get_all_values()
