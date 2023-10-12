@@ -113,7 +113,11 @@ class GoogleSheetsHook(GoogleBaseHook):
 
     def data_preprocessing_1(self, name, data):
         if name in ['01_ContactList', '02_계약관리']:
-            df = pd.DataFrame(data[3:], columns=data[2])
+            df = pd.DataFrame(data[4:], columns=data[3])
+
+            # 첫번째 열 삭제
+            first_column_name = df.columns[0]
+            df = df.drop(columns=first_column_name)
         else:
             df = pd.DataFrame(data[1:], columns=data[0])
 
