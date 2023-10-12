@@ -30,6 +30,7 @@ class GoogleSheetsHook(GoogleBaseHook):
         "부서": "department",
         "담당자": "manager",
         "현재 상태": "current_status",
+        "HP": 'hp',
         "5월프로모션": "may_promotion",
         "비고": "remarks",
         "계약번호": "contract_number",
