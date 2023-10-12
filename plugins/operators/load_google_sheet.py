@@ -24,6 +24,17 @@ class GoogleSheetsHook(GoogleBaseHook):
         '년': 'year'
     }   
 
+    COLUMN_NAME_MAPPING_01 = {
+        "회사": "company",
+        "유형": "type",
+        "부서": "department",
+        "담당자": "manager",
+        "현재상태": "current_status",
+        "5월프로모션": "may_promotion",
+        "비고": "remarks",
+        "계약번호": "contract_number"
+    }
+
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
             raise ValueError("The project_nm parameter is required.")
@@ -62,13 +73,12 @@ class GoogleSheetsHook(GoogleBaseHook):
         dfs = {}
         for name in worksheet_names:
             worksheet = spreadsheet.worksheet(name)
-            data = worksheet.get_all_values()
             
             # 워크시트 이름에 따른 데이터 전처리
             # 현재 작업된 워크시트 목록
             # 01_ContactList
             # 02_계약관리
-            df = self.data_preprocessing_1(name, data)
+            df = self.data_preprocessing_1(name, worksheet)
 
             dfs[name] = df
             self.rename_duplicated_columns(df)
@@ -111,14 +121,22 @@ class GoogleSheetsHook(GoogleBaseHook):
 
         df.columns = cols
 
-    def data_preprocessing_1(self, name, data):
-        if name in ['01_ContactList', '02_계약관리']:
-            df = pd.DataFrame(data[4:], columns=data[3])
+    def data_preprocessing_1(self, name, worksheet):
+        if name in ['01_ContactList']:
+            columns = worksheet.get('B4:O4')[0]
+            values = worksheet.get('B5:O')[0:]
+            df = pd.DataFrame(values, columns=columns)
 
-            # 첫번째 열 삭제
-            first_column_name = df.columns[0]
-            df = df.drop(columns=first_column_name)
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_01[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_01}
+            df.rename(columns=to_rename, inplace=True)
+
+            # no 컬럼을 int로 변환
+            for col in ['no']:
+                if col in df.columns:
+                    df[col] = df[col].astype(int)
         else:
+            data = worksheet.get_all_values()
             df = pd.DataFrame(data[1:], columns=data[0])
 
         return df
