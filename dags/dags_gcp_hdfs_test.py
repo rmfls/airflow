@@ -20,74 +20,31 @@ def download_google_sheet(**kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.save_sheets_as_parquet(spreadsheet_name='KN 광고 관리 문서', task_instance=kwargs['ti'])
 
-# def log_all_xcom_keys(**kwargs):
-#     session = settings.Session()
-#     execution_date = kwargs['execution_date']
-#     xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
-    
-#     schema_key = [xcom.key for xcom in xcom_list]
+# def create_hive_table_task_for_xcom(xcom, dag):
+#     schema = xcom.value
 
-#     for xcom in xcom_list:
-#         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
+#     return SimpleHttpOperator(
+#         task_id=f'hive_create_table_task_{xcom.key}',
+#         method='POST',
+#         endpoint='/hive_cmd',
+#         http_conn_id='local_fast_api_conn_id',
+#         data=json.dumps({
+#             'option': 'create',
+#             'database_name': 'gcp',
+#             'project_name': 'gcp',
+#             'table_name': f'{xcom.key}',
+#             'schema': schema
+#         }),
+#         headers={'Content-Type': 'application/json'},
+#         dag=dag
+#     )
 
-#     session.close()
+# def your_function_or_operator(**kwargs):
+#     # ... 기존 코드 ...
 
-# def create_hive_table_from_xcom(**kwargs):
-#     session = settings.Session()
-#     execution_date = kwargs['execution_date']
-#     xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
-
-#     for xcom in xcom_list:
-#         logging.info(f"Key: {xcom.key}, Value: {xcom.value}")
-
-#         schema = ', '.join(xcom.value)
-
-#         hive_create_table_task = SimpleHttpOperator(
-#             task_id=f'hive_create_table_task_{xcom.key}',
-#             method='POST',
-#             endpoint='/hive_cmd',
-#             http_conn_id='local_fast_api_conn_id',
-#             data=json.dumps({
-#                 'option': 'create',
-#                 'database_name': 'gcp',
-#                 'table_name': f'{xcom.key}',
-#                 'schema': schema,
-#                 'project_name': 'gcp'
-#             }),
-#             headers={'Content-Type': 'application/json'},
-#             dag=dag
-#         )
-
-#         # 이 연산자를 실행하도록 작업 흐름도 설정
-#         hive_create_table_task.execute(context=kwargs)
-
-#     session.close()
-
-def create_hive_table_task_for_xcom(xcom, dag):
-    schema = xcom.value
-
-    return SimpleHttpOperator(
-        task_id=f'hive_create_table_task_{xcom.key}',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'create',
-            'database_name': 'gcp',
-            'project_name': 'gcp',
-            'table_name': f'{xcom.key}',
-            'schema': schema
-        }),
-        headers={'Content-Type': 'application/json'},
-        dag=dag
-    )
-
-def your_function_or_operator(**kwargs):
-    # ... 기존 코드 ...
-
-    # xcom에서 값을 가져와서 로그에 기록
-    value_from_xcom = kwargs['ti'].xcom_pull(key="01_contactlist_schema")
-    logging.info(f"Value from XCom: {value_from_xcom}")
+#     # xcom에서 값을 가져와서 로그에 기록
+#     value_from_xcom = kwargs['ti'].xcom_pull(key="01_contactlist_schema")
+#     logging.info(f"Value from XCom: {value_from_xcom}")
 
 
 with DAG(
@@ -120,22 +77,8 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    # hive_drop_cmd = SimpleHttpOperator(
-    #     task_id='hive_drop_cmd_01_contactlist_schema',
-    #     method='POST',
-    #     endpoint='/hive_cmd',
-    #     http_conn_id='local_fast_api_conn_id',
-    #     data=json.dumps({
-    #         'option': 'drop',
-    #         'table_name': '01_contactlist_schema',
-    #         'database_name': 'gcp',
-    #         'project_name': 'gcp'
-    #     }),
-    #     headers={'Content-Type': 'application/json'}
-    # )
-
-    hive_create_cmd = SimpleHttpOperator(
-        task_id='hive_create_cmd_01_contactlist_schema',
+    hive_create_cmd_01 = SimpleHttpOperator(
+        task_id='hive_create_cmd_01',
         method='POST',
         endpoint='/hive_cmd',
         http_conn_id='local_fast_api_conn_id',
@@ -149,18 +92,35 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    read_sheet_task >> hdfs_put_cmd >> hive_create_cmd
+    hive_create_cmd_02 = SimpleHttpOperator(
+        task_id='hive_create_cmd_02',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'database_name': 'gcp',
+            'project_name': 'gcp',
+            'table_name': '02_contract_management',
+            'schema': '{{ ti.xcom_pull(key=\'02_contract_management_schema\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
 
-    # session = settings.Session()
-    # execution_date = pendulum.datetime(2023, 10, 1, tz='Asia/Seoul')
-    # xcom_list = XCom.get_many(task_ids='read_sheet_task', dag_ids=dag.dag_id, execution_date=execution_date, session=session)
+    hive_create_cmd_03 = SimpleHttpOperator(
+        task_id='hive_create_cmd_03',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'database_name': 'gcp',
+            'project_name': 'gcp',
+            'table_name': '03_campaign_management',
+            'schema': '{{ ti.xcom_pull(key:\'03_campaign_management_schema\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
 
-    # for xcom in xcom_list:
-    #     hive_create_table_task = create_hive_table_task_for_xcom(xcom, dag)
-    #     hdfs_put_cmd >> hive_create_table_task
-    
-    # session.close()
 
-    
-
-
+    read_sheet_task >> hdfs_put_cmd >> [hive_create_cmd_01, hive_create_cmd_02, hive_create_cmd_03]
