@@ -63,7 +63,13 @@ class GoogleSheetsHook(GoogleBaseHook):
         for name in worksheet_names:
             worksheet = spreadsheet.worksheet(name)
             data = worksheet.get_all_values()
-            df = pd.DataFrame(data[1:], columns=data[0])
+            
+            # 워크시트 이름에 따른 데이터 전처리
+            # 현재 작업된 워크시트 목록
+            # 01_ContactList
+            # 02_계약관리
+            df = self.data_preprocessing_1(name, data)
+
             dfs[name] = df
             self.rename_duplicated_columns(df)
 
@@ -104,6 +110,15 @@ class GoogleSheetsHook(GoogleBaseHook):
                                                             range(sum(cols == dup))]
 
         df.columns = cols
+
+    def data_preprocessing_1(self, name, data):
+        if name in ['01_ContactList', '02_계약관리']:
+            df = pd.DataFrame(data[3:], columns=data[2])
+        else:
+            df = pd.DataFrame(data[1:], columns=data[0])
+
+        return df
+
 
 
 
