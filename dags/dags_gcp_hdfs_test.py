@@ -116,8 +116,8 @@ with DAG(
             'option': 'create',
             'database_name': 'gcp',
             'project_name': 'gcp',
-            'table_name': 'proposal_management',
-            'schema': '{{ ti.xcom_pull(key:\'proposal_management_schema\') }}'
+            'table_name': 'business_type',
+            'schema': '{{ ti.xcom_pull(key:\'business_type_schema\') }}'
         }),
         headers={'Content-Type': 'application/json'}
     )
