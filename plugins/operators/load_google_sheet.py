@@ -218,7 +218,3 @@ class GoogleSheetsHook(GoogleBaseHook):
             df = pd.DataFrame(data[1:], columns=data[0])
 
         return df
-
-
-
-
