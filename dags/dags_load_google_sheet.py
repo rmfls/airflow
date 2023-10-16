@@ -222,31 +222,16 @@ with DAG(
     )
 
 
-
-    # read_sheet_task_1 >> preprocessing_task_1
-    # read_sheet_task_2 >> preprocessing_task_2
-    # read_sheet_task_3 >> preprocessing_task_3
+    read_sheet_task_1 >> preprocessing_task_1
+    read_sheet_task_2 >> preprocessing_task_2
+    read_sheet_task_3 >> preprocessing_task_3
     
-    # [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
+    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
 
-    # hdfs_put_cmd >> xcom_push_task_1
-    # hdfs_put_cmd >> xcom_push_task_2
-    # hdfs_put_cmd >> xcom_push_task_3
+    hdfs_put_cmd >> xcom_push_task_1
+    hdfs_put_cmd >> xcom_push_task_2
+    hdfs_put_cmd >> xcom_push_task_3
 
-    # xcom_push_task_1 >> hive_create_cmd_1
-    # xcom_push_task_2 >> hive_create_cmd_2
-    # xcom_push_task_3 >> hive_create_cmd_3
-
-    [read_sheet_task_1, read_sheet_task_2, read_sheet_task_3] >> load_complete_task
-
-    load_complete_task >> [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3]
-    
-    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> preprocessing_data_task
-    
-    preprocessing_data_task >> hdfs_put_cmd >> hdfs_put_task
-
-    hdfs_put_task >> [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3]
-
-    [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3] >> create_schema_task
-
-    create_schema_task >> [hive_create_cmd_1, hive_create_cmd_2, hive_create_cmd_3] >> create_hive_table_task
+    xcom_push_task_1 >> hive_create_cmd_1
+    xcom_push_task_2 >> hive_create_cmd_2
+    xcom_push_task_3 >> hive_create_cmd_3
