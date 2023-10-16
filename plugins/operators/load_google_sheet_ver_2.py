@@ -64,6 +64,24 @@ class GoogleSheetsHook(GoogleBaseHook):
         df.to_parquet(save_parquet_path, index=False)
         print(f"파일 생성: {en_worksheet_name}.parquet")
     
+    def read_and_preprocessing_data(self, worksheet_name):
+        en_worksheet_name = self.convert_filename(worksheet_name)
+        save_parquet_path = os.path.join(self.airflow_file_path, en_worksheet_name, f"{en_worksheet_name}.parquet")
+
+        df = pd.read_parquet(save_parquet_path)
+
+        if worksheet_name == '01_ContactList':
+            print(f"{worksheet_name} 워크시트 전처리 완료")
+        elif worksheet_name == '02_계약관리':
+            print(f"{worksheet_name} 워크시트 전처리 완료")
+        elif worksheet_name == '03_캠페인관리':
+            print(f"{worksheet_name} 워크시트 전처리 완료")
+        
+        # parquet 파일로 저장
+        df.to_parquet(save_parquet_path, index=False)
+        print(f"파일 덮어씌우기: {en_worksheet_name}.parquet")
+
+    
     @staticmethod
     def convert_filename(kor_name):
         english_name = kor_name.split('.')[0]
