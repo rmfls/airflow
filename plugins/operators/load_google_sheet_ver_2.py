@@ -2,6 +2,8 @@ from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 import gspread
 import os
 import pandas as pd
+from operators.hive_schema import generate_hive_schema_from_parquet
+
 
 class GoogleSheetsHook(GoogleBaseHook):
     BASE_PATH = '/opt/airflow/files'
@@ -71,15 +73,30 @@ class GoogleSheetsHook(GoogleBaseHook):
         df = pd.read_parquet(save_parquet_path)
 
         if worksheet_name == '01_ContactList':
+            # 데이터 전처리
+            # xcom push
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '02_계약관리':
+            # 데이터 전처리
+            # xcom push
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '03_캠페인관리':
+            # 데이터 전처리
+            # xcom push
             print(f"{worksheet_name} 워크시트 전처리 완료")
         
         # parquet 파일로 저장
         df.to_parquet(save_parquet_path, index=False)
         print(f"파일 덮어씌우기: {en_worksheet_name}.parquet")
+    
+    def read_and_xcom_push(self, worksheet_name, task_instance=None):
+        en_worksheet_name = self.convert_filename(worksheet_name)
+        save_parquet_path = os.path.join(self.airflow_file_path, en_worksheet_name, f"{en_worksheet_name}.parquet")
+
+        if task_instance:
+            schema = generate_hive_schema_from_parquet(save_parquet_path)
+            task_instance.xcom_push(key=f"{en_worksheet_name}", value=schema)
+            print(f"{en_worksheet_name}.parquet => 스키마 생성, xcom_push")
 
     
     @staticmethod

@@ -26,6 +26,11 @@ def preprocessing_google_sheet(worksheet_name, **kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.read_and_preprocessing_data(worksheet_name=worksheet_name)
 
+def schema_xcom_push(worksheet_name, **kwargs):
+    project_nm = default_args['project_nm']
+    hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
+    hook.read_and_xcom_push(worksheet_name=worksheet_name, task_instance=kwargs)
+
 with DAG(
     dag_id='dags_load_google_sheet',
     description='Read data from Google Sheets',
@@ -99,8 +104,37 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    # 스키마 생성 task
+    xcom_push_task_1 = PythonOperator(
+        task_id='xcom_push_task_1',
+        python_callable=schema_xcom_push,
+        op_kwargs={'worksheet_name': '01_ContactList'},
+        provide_context=True,
+        dag=dag
+    )
+
+    xcom_push_task_2 = PythonOperator(
+        task_id='xcom_push_task_2',
+        python_callable=schema_xcom_push,
+        op_kwargs={'worksheet_name': '02_계약관리'},
+        provide_context=True,
+        dag=dag
+    )
+
+    xcom_push_task_3 = PythonOperator(
+        task_id='xcom_push_task_3',
+        python_callable=schema_xcom_push,
+        op_kwargs={'worksheet_name': '03_캠페인관리'},
+        provide_context=True,
+        dag=dag
+    )
+
+
 
     read_sheet_task_1 >> preprocessing_task_1
     read_sheet_task_2 >> preprocessing_task_2
     read_sheet_task_3 >> preprocessing_task_3
+    
     [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
+
+    hdfs_put_cmd >> [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3]
