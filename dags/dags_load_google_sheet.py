@@ -1,6 +1,10 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
 from datetime import datetime
+from airflow.models import Variable
+
+import json
 import pendulum
 from operators.load_google_sheet_ver_2 import GoogleSheetsHook
 
@@ -80,7 +84,23 @@ with DAG(
         dag=dag
     )
 
+    hdfs_put_cmd = SimpleHttpOperator(
+        task_id='hdfs_put_cmd',
+        method='POST',
+        endpoint='/hdfs_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'put',
+            'hadoop_base_path': Variable.get('hadoop_base_path'),
+            'project_name': 'gcp',
+            'local_path': f"/Users/green/airflow/files/gcp/",
+            'user': 'green'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
 
     read_sheet_task_1 >> preprocessing_task_1
     read_sheet_task_2 >> preprocessing_task_2
     read_sheet_task_3 >> preprocessing_task_3
+    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
