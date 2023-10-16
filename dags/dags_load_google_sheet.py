@@ -20,7 +20,7 @@ def download_google_sheet(worksheet_name, **kwargs):
 def preprocessing_google_sheet(worksheet_name, **kwargs):
     project_nm = default_args['project_nm']
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
-    hook.read_and_preprocessing_data(worksheet_name=worksheet_name, task_instance=kwargs)
+    hook.read_and_preprocessing_data(worksheet_name=worksheet_name)
 
 with DAG(
     dag_id='dags_load_google_sheet',
