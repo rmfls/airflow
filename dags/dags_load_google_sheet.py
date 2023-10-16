@@ -31,6 +31,9 @@ def schema_xcom_push(worksheet_name, **kwargs):
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
     hook.read_and_xcom_push(worksheet_name=worksheet_name, task_instance=kwargs['ti'])
 
+def print_completion_message(task_name, **kwargs):
+    print(f"Task {task_name} has been completed!")
+
 with DAG(
     dag_id='dags_load_google_sheet',
     description='Read data from Google Sheets',
@@ -64,6 +67,15 @@ with DAG(
         dag=dag
     )
 
+    # 데이터 로드 task 완료
+    load_complete_task = PythonOperator(
+        task_id='load_complete_task',
+        python_callable=print_completion_message,
+        op_kwargs={'task_name': 'loading_google_sheet_task'},
+        provide_context=True,
+        dag=dag
+    )
+
     # 데이터 전처리 task
     preprocessing_task_1 = PythonOperator(
         task_id='preprocessing_task_1',
@@ -89,6 +101,16 @@ with DAG(
         dag=dag
     )
 
+    # 데이터 전처리 task 완료
+    preprocessing_data_task = PythonOperator(
+        task_id='preprocessing_data_task',
+        python_callable=print_completion_message,
+        op_kwargs={'task_name': 'preprocessing_data_task'},
+        provide_context=True,
+        dag=dag
+    )
+
+    # hadoop put task
     hdfs_put_cmd = SimpleHttpOperator(
         task_id='hdfs_put_cmd',
         method='POST',
@@ -102,6 +124,15 @@ with DAG(
             'user': 'green'
         }),
         headers={'Content-Type': 'application/json'}
+    )
+
+    # hadoop -put task 완료
+    hdfs_put_task = PythonOperator(
+        task_id='hdfs_put_task',
+        python_callable=print_completion_message,
+        op_kwargs={'task_name': 'hdfs_put_task'},
+        provide_context=True,
+        dag=dag
     )
 
     # 스키마 생성 task
@@ -125,6 +156,15 @@ with DAG(
         task_id='xcom_push_task_3',
         python_callable=schema_xcom_push,
         op_kwargs={'worksheet_name': '03_캠페인관리'},
+        provide_context=True,
+        dag=dag
+    )
+
+    # 스키마 생성 task 완료
+    create_schema_task = PythonOperator(
+        task_id='create_schema_task',
+        python_callable=print_completion_message,
+        op_kwargs={'task_name': 'create_schema_task'},
         provide_context=True,
         dag=dag
     )
@@ -172,18 +212,41 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    # 하이브 테이블 생성 task
+    create_hive_table_task = PythonOperator(
+        task_id='create_hive_table_task',
+        python_callable=print_completion_message,
+        op_kwargs={'task_name': 'create_hive_table_task'},
+        provide_context=True,
+        dag=dag
+    )
 
 
-    read_sheet_task_1 >> preprocessing_task_1
-    read_sheet_task_2 >> preprocessing_task_2
-    read_sheet_task_3 >> preprocessing_task_3
+
+    # read_sheet_task_1 >> preprocessing_task_1
+    # read_sheet_task_2 >> preprocessing_task_2
+    # read_sheet_task_3 >> preprocessing_task_3
     
-    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
+    # [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
 
-    hdfs_put_cmd >> xcom_push_task_1
-    hdfs_put_cmd >> xcom_push_task_2
-    hdfs_put_cmd >> xcom_push_task_3
+    # hdfs_put_cmd >> xcom_push_task_1
+    # hdfs_put_cmd >> xcom_push_task_2
+    # hdfs_put_cmd >> xcom_push_task_3
 
-    xcom_push_task_1 >> hive_create_cmd_1
-    xcom_push_task_2 >> hive_create_cmd_2
-    xcom_push_task_3 >> hive_create_cmd_3
+    # xcom_push_task_1 >> hive_create_cmd_1
+    # xcom_push_task_2 >> hive_create_cmd_2
+    # xcom_push_task_3 >> hive_create_cmd_3
+
+    [read_sheet_task_1, read_sheet_task_2, read_sheet_task_3] >> load_complete_task
+
+    load_complete_task >> [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3]
+    
+    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> preprocessing_data_task
+    
+    preprocessing_data_task >> hdfs_put_cmd >> hdfs_put_task
+
+    hdfs_put_task >> [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3]
+
+    [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3] >> create_schema_task
+
+    create_schema_task >> [hive_create_cmd_1, hive_create_cmd_2]
