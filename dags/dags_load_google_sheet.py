@@ -129,6 +129,21 @@ with DAG(
         dag=dag
     )
 
+    # create hive table
+    hive_create_cmd_1 = SimpleHttpOperator(
+        task_id='hive_create_cmd_1',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'project_name': 'gcp',
+            'table_name': '01_contactlist',
+            'schema': '{{ ti.xcom_pull(key=\'01_contactlist\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
 
 
     read_sheet_task_1 >> preprocessing_task_1
@@ -140,3 +155,5 @@ with DAG(
     hdfs_put_cmd >> xcom_push_task_1
     hdfs_put_cmd >> xcom_push_task_2
     hdfs_put_cmd >> xcom_push_task_3
+
+    xcom_push_task_1 >> hive_create_cmd_1
