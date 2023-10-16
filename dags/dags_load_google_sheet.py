@@ -29,4 +29,29 @@ with DAG(
         dag=dag
     )
 
-    read_sheet_task_1
+    read_sheet_task_2 = PythonOperator(
+        task_id='read_sheet_task_2',
+        python_callable=download_google_sheet,
+        op_kwargs={'worksheet_name': '23년목표및현황'},
+        provide_context=True,
+        dag=dag
+    )
+
+    read_sheet_task_3 = PythonOperator(
+        task_id='read_sheet_task_3',
+        python_callable=download_google_sheet,
+        op_kwargs={'worksheet_name': 'PUSH 월별집계'},
+        provide_context=True,
+        dag=dag
+    )
+
+    read_sheet_task_4 = PythonOperator(
+        task_id='read_sheet_task_4',
+        python_callable=download_google_sheet,
+        op_kwargs={'worksheet_name': '매출관리'},
+        provide_context=True,
+        dag=dag
+    )
+
+
+    [read_sheet_task_1, read_sheet_task_2, read_sheet_task_3] >> read_sheet_task_4
