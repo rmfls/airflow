@@ -67,15 +67,6 @@ with DAG(
         dag=dag
     )
 
-    # 데이터 로드 task 완료
-    load_complete_task = PythonOperator(
-        task_id='load_complete_task',
-        python_callable=print_completion_message,
-        op_kwargs={'task_name': 'loading_google_sheet_task'},
-        provide_context=True,
-        dag=dag
-    )
-
     # 데이터 전처리 task
     preprocessing_task_1 = PythonOperator(
         task_id='preprocessing_task_1',
@@ -101,15 +92,6 @@ with DAG(
         dag=dag
     )
 
-    # 데이터 전처리 task 완료
-    preprocessing_data_task = PythonOperator(
-        task_id='preprocessing_data_task',
-        python_callable=print_completion_message,
-        op_kwargs={'task_name': 'preprocessing_data_task'},
-        provide_context=True,
-        dag=dag
-    )
-
     # hadoop put task
     hdfs_put_cmd = SimpleHttpOperator(
         task_id='hdfs_put_cmd',
@@ -124,15 +106,6 @@ with DAG(
             'user': 'green'
         }),
         headers={'Content-Type': 'application/json'}
-    )
-
-    # hadoop -put task 완료
-    hdfs_put_task = PythonOperator(
-        task_id='hdfs_put_task',
-        python_callable=print_completion_message,
-        op_kwargs={'task_name': 'hdfs_put_task'},
-        provide_context=True,
-        dag=dag
     )
 
     # 스키마 생성 task
@@ -156,15 +129,6 @@ with DAG(
         task_id='xcom_push_task_3',
         python_callable=schema_xcom_push,
         op_kwargs={'worksheet_name': '03_캠페인관리'},
-        provide_context=True,
-        dag=dag
-    )
-
-    # 스키마 생성 task 완료
-    create_schema_task = PythonOperator(
-        task_id='create_schema_task',
-        python_callable=print_completion_message,
-        op_kwargs={'task_name': 'create_schema_task'},
         provide_context=True,
         dag=dag
     )
@@ -210,15 +174,6 @@ with DAG(
             'schema': '{{ ti.xcom_pull(key=\'03_campaign_management\') }}'
         }),
         headers={'Content-Type': 'application/json'}
-    )
-
-    # 하이브 테이블 생성 task
-    create_hive_table_task = PythonOperator(
-        task_id='create_hive_table_task',
-        python_callable=print_completion_message,
-        op_kwargs={'task_name': 'create_hive_table_task'},
-        provide_context=True,
-        dag=dag
     )
 
 
