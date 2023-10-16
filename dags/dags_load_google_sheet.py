@@ -137,4 +137,6 @@ with DAG(
     
     [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
 
-    hdfs_put_cmd >> [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3]
+    hdfs_put_cmd >> xcom_push_task_1
+    hdfs_put_cmd >> xcom_push_task_2
+    hdfs_put_cmd >> xcom_push_task_3
