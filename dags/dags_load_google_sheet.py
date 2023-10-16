@@ -81,5 +81,6 @@ with DAG(
     )
 
 
-
-    [read_sheet_task_1, read_sheet_task_2, read_sheet_task_3] >> [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3]
+    read_sheet_task_1 >> preprocessing_task_1
+    read_sheet_task_2 >> preprocessing_task_2
+    read_sheet_task_3 >> preprocessing_task_3
