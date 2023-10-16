@@ -249,4 +249,4 @@ with DAG(
 
     [xcom_push_task_1, xcom_push_task_2, xcom_push_task_3] >> create_schema_task
 
-    create_schema_task >> [hive_create_cmd_1, hive_create_cmd_2]
+    create_schema_task >> [hive_create_cmd_1, hive_create_cmd_2, hive_create_cmd_3] >> create_hive_table_task
