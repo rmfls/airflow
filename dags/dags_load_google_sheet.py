@@ -144,6 +144,34 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    hive_create_cmd_2 = SimpleHttpOperator(
+        task_id='hive_create_cmd_2',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'project_name': 'gcp',
+            'table_name': '02_contract_management',
+            'schema': '{{ ti.xcom_pull(key=\'02_contract_management\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
+    hive_create_cmd_3 = SimpleHttpOperator(
+        task_id='hive_create_cmd_3',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'project_name': 'gcp',
+            'table_name': '03_campaign_management',
+            'schema': '{{ ti.xcom_pull(key=\'03_campaign_management\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
 
 
     read_sheet_task_1 >> preprocessing_task_1
@@ -157,3 +185,5 @@ with DAG(
     hdfs_put_cmd >> xcom_push_task_3
 
     xcom_push_task_1 >> hive_create_cmd_1
+    xcom_push_task_2 >> hive_create_cmd_2
+    xcom_push_task_3 >> hive_create_cmd_3
