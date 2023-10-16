@@ -19,7 +19,7 @@ worksheet_names = ['Push 관리', '23년목표및현황', 'PUSH 월별집계', '
 def download_google_sheet(worksheet_name, **kwargs):
     project_nm = default_args['project_nm']
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
-    hook.load_and_save_google_sheet_as_parquet(spreadsheet_name='KN 광고 관리 문서', worksheet_name=worksheet_name, task_instance=kwargs)
+    hook.load_and_save_google_sheet_as_parquet(spreadsheet_name='KN 광고 관리 문서', worksheet_name=worksheet_name, task_instance=kwargs['ti'])
 
 def preprocessing_google_sheet(worksheet_name, **kwargs):
     project_nm = default_args['project_nm']
@@ -29,7 +29,7 @@ def preprocessing_google_sheet(worksheet_name, **kwargs):
 def schema_xcom_push(worksheet_name, **kwargs):
     project_nm = default_args['project_nm']
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)
-    hook.read_and_xcom_push(worksheet_name=worksheet_name, task_instance=kwargs)
+    hook.read_and_xcom_push(worksheet_name=worksheet_name, task_instance=kwargs['ti'])
 
 with DAG(
     dag_id='dags_load_google_sheet',
