@@ -96,6 +96,11 @@ class GoogleSheetsHook(GoogleBaseHook):
             to_rename = {col: self.COLUMN_NAME_MAPPING_01[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_01}
             df.rename(columns=to_rename, inplace=True)
 
+            # no 컬럼을 int로 변환
+            for col in ['no']:
+                if col in df.columns:
+                    df[col] = df[col].astype(int)
+
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '02_계약관리':
             # 데이터 전처리
