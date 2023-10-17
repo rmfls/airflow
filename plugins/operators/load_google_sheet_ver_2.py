@@ -73,7 +73,10 @@ class GoogleSheetsHook(GoogleBaseHook):
         "정산 완료": "settlement_completed",
         "관련 자료": "related_documents",
         "비고": "remarks",
-        "Targeting": "targeting"
+        "Targeting": "targeting",
+        "총일수": "duration_date",
+        "일자별금액": "amount_per_date",
+        "1월": "1_month"
     }  
 
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
