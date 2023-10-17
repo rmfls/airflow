@@ -48,6 +48,34 @@ class GoogleSheetsHook(GoogleBaseHook):
         "완료 및 보관 여부 (Y/N)": "completion_and_storage_status"
     }  
 
+    COLUMN_NAME_MAPPING_03 = {
+        "계약번호": "contract_number", # int
+        "캠페인번호": "campaign_number",
+        "캠페인명": "campaign_name",
+        "광고주": "advertiser",
+        "대행사": "agency",
+        "렙사": "representative",
+        "담당자": "manager",
+        "Placement": "placement",
+        "집행금액": "execution_amount", # 결측치 처리(0), int
+        "수수료율": "commission_rate",
+        "수익": "profit", # 결측치 처리(0), int
+        "요청일(수주일)": "request_date",
+        "게재시작일": "publish_start_date",
+        "게재종료일": "publish_end_date",
+        "계산서발행일 ": "invoice_date",
+        "정산일(1차)": "first_settlement_date",
+        "업종대분류": "major_business_category",
+        "업종중분류": "sub_business_category",
+        "정산기간(일)": "settlement_period_days",
+        "캠페인 완료": "campaign_completion",
+        "세금계산서 발행": "tax_invoice_issued",
+        "정산 완료": "settlement_completed",
+        "관련 자료": "related_documents",
+        "비고": "remarks",
+        "Targeting": "targeting"
+    }  
+
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
             raise ValueError("The project_nm parameter is required.")
@@ -134,6 +162,25 @@ class GoogleSheetsHook(GoogleBaseHook):
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '03_캠페인관리':
             # 데이터 전처리
+            df = df.iloc[1:].reset_index(drop=True)
+
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_03[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_03}
+            df.rename(columns=to_rename, inplace=True)
+
+            # contract_number 컬럼을 int로 변환
+            for col in ['contract_number']:
+                if col in df.columns:
+                    df[col] = df[col].astype(int)
+
+            # execution_amount, profit 컬럼 결측치 처리, int로 변환
+            for col in ['execution_amount', 'profit']:
+                if col in df.columns:
+                    df[col].fillna('₩0', inplace=True)
+                    # 통화 기호와 쉼표 제거 후 int로 변환
+                    df[col] = pd.to_numeric(df[col].str.replace('[₩,]', '', regex=True), errors='coerce')
+
+
             print(f"{worksheet_name} 워크시트 전처리 완료")
         
         # parquet 파일로 저장
