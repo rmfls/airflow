@@ -24,6 +24,18 @@ class GoogleSheetsHook(GoogleBaseHook):
         '년': 'year'
     }   
 
+    COLUMN_NAME_MAPPING_01 = {
+        "회사": "company",
+        "유형": "type",
+        "부서": "department",
+        "담당자": "manager",
+        "현재 상태": "current_status",
+        "5월프로모션": "may_promotion",
+        "비고": "remarks",
+        "계약번호": "contract_number",
+        "f/u": "f_u"
+    }
+
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
             raise ValueError("The project_nm parameter is required.")
@@ -79,6 +91,10 @@ class GoogleSheetsHook(GoogleBaseHook):
             df.columns = df.iloc[2]
             df = df.iloc[3:].reset_index(drop=True)
             df.columns.name = None
+
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_01[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_01}
+            df.rename(columns=to_rename, inplace=True)
 
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '02_계약관리':
