@@ -15,7 +15,6 @@ default_args = {
 # 모든 워크시트 이름 조회
 worksheet_names = ['Push 관리', '23년목표및현황', 'PUSH 월별집계', '매출관리', '03_캠페인관리', '제안 관리', '단비웅진', '02_계약관리', '01_ContactList', '시트16', '업종구분', '[기타] 계약번호 구성 체계', '시트28']
 
-
 def download_google_sheet(worksheet_name, **kwargs):
     project_nm = default_args['project_nm']
     hook = GoogleSheetsHook(gcp_conn_id='sheet_conn_id_test', project_nm=project_nm)

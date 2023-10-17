@@ -74,15 +74,18 @@ class GoogleSheetsHook(GoogleBaseHook):
 
         if worksheet_name == '01_ContactList':
             # 데이터 전처리
-            # xcom push
+
+            df = df.iloc[:, 1:]
+            df.columns = df.iloc[2]
+            df = df.iloc[3:].reset_index(drop=True)
+            df.columns.name = None
+
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '02_계약관리':
             # 데이터 전처리
-            # xcom push
             print(f"{worksheet_name} 워크시트 전처리 완료")
         elif worksheet_name == '03_캠페인관리':
             # 데이터 전처리
-            # xcom push
             print(f"{worksheet_name} 워크시트 전처리 완료")
         
         # parquet 파일로 저장
