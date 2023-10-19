@@ -80,7 +80,7 @@ class GoogleSheetsHook(GoogleBaseHook):
     }  
 
     COLUMN_NAME_MAPPING_04 = {
-        "날짜": "date",
+        "날짜": "push_date",
         "Log 등록 여부": "Log_Registration_Status"
     }
 
