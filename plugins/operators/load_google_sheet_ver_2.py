@@ -202,7 +202,6 @@ class GoogleSheetsHook(GoogleBaseHook):
                 if col in df.columns:
                     df[col].fillna('0', inplace=True)
                     df[col] = pd.to_numeric(df[col].str.replace('[,]', '', regex=True), errors='coerce')
-                    df[col] = df[col].astype(int)
 
             print(f"{worksheet_name} 워크시트 전처리 완료")
 
