@@ -221,20 +221,3 @@ with DAG(
 
 
     read_sheet_group >> preprocessing_group >> hdfs_put_cmd >> xcom_push_group >> create_table_group
-
-    # read_sheet_task_1 >> preprocessing_task_1
-    # read_sheet_task_2 >> preprocessing_task_2
-    # read_sheet_task_3 >> preprocessing_task_3
-    # read_sheet_task_4 >> preprocessing_task_4
-
-    # [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3, preprocessing_task_4] >> hdfs_put_cmd
-
-    # hdfs_put_cmd >> xcom_push_task_1
-    # hdfs_put_cmd >> xcom_push_task_2
-    # hdfs_put_cmd >> xcom_push_task_3
-    # hdfs_put_cmd >> xcom_push_task_4
-
-    # xcom_push_task_1 >> hive_create_cmd_1
-    # xcom_push_task_2 >> hive_create_cmd_2
-    # xcom_push_task_3 >> hive_create_cmd_3
-    # xcom_push_task_4 >> hive_create_cmd_4
