@@ -79,6 +79,11 @@ class GoogleSheetsHook(GoogleBaseHook):
         "1월": "1_month"
     }  
 
+    COLUMN_NAME_MAPPING_04 = {
+        "날짜": "date",
+        "Log 등록 여부": "Log_Registration_Status"
+    }
+
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
             raise ValueError("The project_nm parameter is required.")
@@ -182,10 +187,25 @@ class GoogleSheetsHook(GoogleBaseHook):
                     df[col].fillna('₩0', inplace=True)
                     # 통화 기호와 쉼표 제거 후 int로 변환
                     df[col] = pd.to_numeric(df[col].str.replace('[₩,]', '', regex=True), errors='coerce')
+    
+            print(f"{worksheet_name} 워크시트 전처리 완료")
+        elif worksheet_name == 'Push 관리':
+            # 데이터 전처리
+            df = df.iloc[1:].reset_index(drop=True)
 
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_04[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_04}
+            df.rename(columns=to_rename, inplace=True)
+
+            # execution_amount, profit 컬럼 결측치 처리, int로 변환
+            for col in ['#push']:
+                if col in df.columns:
+                    df[col].fillna(0, inplace=True)
+                    df[col] = df[col].astype(int)
 
             print(f"{worksheet_name} 워크시트 전처리 완료")
-        
+
+
         # parquet 파일로 저장
         df.to_parquet(save_parquet_path, index=False)
         print(f"파일 덮어씌우기: {en_worksheet_name}.parquet")

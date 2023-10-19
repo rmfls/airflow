@@ -66,6 +66,14 @@ with DAG(
         dag=dag
     )
 
+    read_sheet_task_4 = PythonOperator(
+        task_id='read_sheet_task_4',
+        python_callable=download_google_sheet,
+        op_kwargs={'worksheet_name': 'Push 관리'},
+        provide_context=True,
+        dag=dag
+    )
+
     # 데이터 전처리 task
     preprocessing_task_1 = PythonOperator(
         task_id='preprocessing_task_1',
@@ -87,6 +95,14 @@ with DAG(
         task_id='preprocessing_task_3',
         python_callable=preprocessing_google_sheet,
         op_kwargs={'worksheet_name': '03_캠페인관리'},
+        provide_context=True,
+        dag=dag
+    )
+
+    preprocessing_task_4 = PythonOperator(
+        task_id='preprocessing_task_4',
+        python_callable=preprocessing_google_sheet,
+        op_kwargs={'worksheet_name': 'Push 관리'},
         provide_context=True,
         dag=dag
     )
@@ -128,6 +144,14 @@ with DAG(
         task_id='xcom_push_task_3',
         python_callable=schema_xcom_push,
         op_kwargs={'worksheet_name': '03_캠페인관리'},
+        provide_context=True,
+        dag=dag
+    )
+
+    xcom_push_task_4 = PythonOperator(
+        task_id='xcom_push_task_4',
+        python_callable=schema_xcom_push,
+        op_kwargs={'worksheet_name': 'Push 관리'},
         provide_context=True,
         dag=dag
     )
@@ -175,17 +199,34 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    hive_create_cmd_4 = SimpleHttpOperator(
+        task_id='hive_create_cmd_4',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'project_name': 'gcp',
+            'table_name': 'push_management',
+            'schema': '{{ ti.xcom_pull(key=\'push_management\') }}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
 
     read_sheet_task_1 >> preprocessing_task_1
     read_sheet_task_2 >> preprocessing_task_2
     read_sheet_task_3 >> preprocessing_task_3
+    read_sheet_task_4 >> preprocessing_task_4
     
-    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3] >> hdfs_put_cmd
+    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3, preprocessing_task_4] >> hdfs_put_cmd
 
     hdfs_put_cmd >> xcom_push_task_1
     hdfs_put_cmd >> xcom_push_task_2
     hdfs_put_cmd >> xcom_push_task_3
+    hdfs_put_cmd >> xcom_push_task_4
 
     xcom_push_task_1 >> hive_create_cmd_1
     xcom_push_task_2 >> hive_create_cmd_2
     xcom_push_task_3 >> hive_create_cmd_3
+    xcom_push_task_4 >> hive_create_cmd_4
