@@ -81,7 +81,8 @@ class GoogleSheetsHook(GoogleBaseHook):
 
     COLUMN_NAME_MAPPING_04 = {
         "날짜": "push_date",
-        "Log 등록 여부": "Log_Registration_Status"
+        "Log 등록 여부": "Log_Registration_Status",
+        "Target url": "target_url"
     }
 
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
