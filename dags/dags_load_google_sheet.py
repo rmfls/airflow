@@ -4,6 +4,8 @@ from airflow.providers.http.operators.http import SimpleHttpOperator
 from datetime import datetime
 from airflow.models import Variable
 
+from airflow.utils.task_group import TaskGroup
+
 import json
 import pendulum
 from operators.load_google_sheet_ver_2 import GoogleSheetsHook
@@ -41,71 +43,73 @@ with DAG(
     default_args=default_args
 ) as dag:
     
-    # 데이터 로드 task
-    read_sheet_task_1 = PythonOperator(
-        task_id='read_sheet_task_1',
-        python_callable=download_google_sheet,
-        op_kwargs={'worksheet_name': '01_ContactList'},
-        provide_context=True,
-        dag=dag
-    )
+    with TaskGroup("read_sheet_group") as read_sheet_group:
+        # 데이터 로드 task
+        read_sheet_task_1 = PythonOperator(
+            task_id='read_sheet_task_1',
+            python_callable=download_google_sheet,
+            op_kwargs={'worksheet_name': '01_ContactList'},
+            provide_context=True,
+            dag=dag
+        )
 
-    read_sheet_task_2 = PythonOperator(
-        task_id='read_sheet_task_2',
-        python_callable=download_google_sheet,
-        op_kwargs={'worksheet_name': '02_계약관리'},
-        provide_context=True,
-        dag=dag
-    )
+        read_sheet_task_2 = PythonOperator(
+            task_id='read_sheet_task_2',
+            python_callable=download_google_sheet,
+            op_kwargs={'worksheet_name': '02_계약관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    read_sheet_task_3 = PythonOperator(
-        task_id='read_sheet_task_3',
-        python_callable=download_google_sheet,
-        op_kwargs={'worksheet_name': '03_캠페인관리'},
-        provide_context=True,
-        dag=dag
-    )
+        read_sheet_task_3 = PythonOperator(
+            task_id='read_sheet_task_3',
+            python_callable=download_google_sheet,
+            op_kwargs={'worksheet_name': '03_캠페인관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    read_sheet_task_4 = PythonOperator(
-        task_id='read_sheet_task_4',
-        python_callable=download_google_sheet,
-        op_kwargs={'worksheet_name': 'Push 관리'},
-        provide_context=True,
-        dag=dag
-    )
+        read_sheet_task_4 = PythonOperator(
+            task_id='read_sheet_task_4',
+            python_callable=download_google_sheet,
+            op_kwargs={'worksheet_name': 'Push 관리'},
+            provide_context=True,
+            dag=dag
+        )
+    
+    with TaskGroup("preprocessing_group") as preprocessing_group:
+        # 데이터 전처리 task
+        preprocessing_task_1 = PythonOperator(
+            task_id='preprocessing_task_1',
+            python_callable=preprocessing_google_sheet,
+            op_kwargs={'worksheet_name': '01_ContactList'},
+            provide_context=True,
+            dag=dag
+        )
 
-    # 데이터 전처리 task
-    preprocessing_task_1 = PythonOperator(
-        task_id='preprocessing_task_1',
-        python_callable=preprocessing_google_sheet,
-        op_kwargs={'worksheet_name': '01_ContactList'},
-        provide_context=True,
-        dag=dag
-    )
+        preprocessing_task_2 = PythonOperator(
+            task_id='preprocessing_task_2',
+            python_callable=preprocessing_google_sheet,
+            op_kwargs={'worksheet_name': '02_계약관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    preprocessing_task_2 = PythonOperator(
-        task_id='preprocessing_task_2',
-        python_callable=preprocessing_google_sheet,
-        op_kwargs={'worksheet_name': '02_계약관리'},
-        provide_context=True,
-        dag=dag
-    )
+        preprocessing_task_3 = PythonOperator(
+            task_id='preprocessing_task_3',
+            python_callable=preprocessing_google_sheet,
+            op_kwargs={'worksheet_name': '03_캠페인관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    preprocessing_task_3 = PythonOperator(
-        task_id='preprocessing_task_3',
-        python_callable=preprocessing_google_sheet,
-        op_kwargs={'worksheet_name': '03_캠페인관리'},
-        provide_context=True,
-        dag=dag
-    )
-
-    preprocessing_task_4 = PythonOperator(
-        task_id='preprocessing_task_4',
-        python_callable=preprocessing_google_sheet,
-        op_kwargs={'worksheet_name': 'Push 관리'},
-        provide_context=True,
-        dag=dag
-    )
+        preprocessing_task_4 = PythonOperator(
+            task_id='preprocessing_task_4',
+            python_callable=preprocessing_google_sheet,
+            op_kwargs={'worksheet_name': 'Push 관리'},
+            provide_context=True,
+            dag=dag
+        )
 
     # hadoop put task
     hdfs_put_cmd = SimpleHttpOperator(
@@ -123,110 +127,114 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
-    # 스키마 생성 task
-    xcom_push_task_1 = PythonOperator(
-        task_id='xcom_push_task_1',
-        python_callable=schema_xcom_push,
-        op_kwargs={'worksheet_name': '01_ContactList'},
-        provide_context=True,
-        dag=dag
-    )
+    with TaskGroup("xcom_push_group") as xcom_push_group:
+        # 스키마 생성 task
+        xcom_push_task_1 = PythonOperator(
+            task_id='xcom_push_task_1',
+            python_callable=schema_xcom_push,
+            op_kwargs={'worksheet_name': '01_ContactList'},
+            provide_context=True,
+            dag=dag
+        )
 
-    xcom_push_task_2 = PythonOperator(
-        task_id='xcom_push_task_2',
-        python_callable=schema_xcom_push,
-        op_kwargs={'worksheet_name': '02_계약관리'},
-        provide_context=True,
-        dag=dag
-    )
+        xcom_push_task_2 = PythonOperator(
+            task_id='xcom_push_task_2',
+            python_callable=schema_xcom_push,
+            op_kwargs={'worksheet_name': '02_계약관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    xcom_push_task_3 = PythonOperator(
-        task_id='xcom_push_task_3',
-        python_callable=schema_xcom_push,
-        op_kwargs={'worksheet_name': '03_캠페인관리'},
-        provide_context=True,
-        dag=dag
-    )
+        xcom_push_task_3 = PythonOperator(
+            task_id='xcom_push_task_3',
+            python_callable=schema_xcom_push,
+            op_kwargs={'worksheet_name': '03_캠페인관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    xcom_push_task_4 = PythonOperator(
-        task_id='xcom_push_task_4',
-        python_callable=schema_xcom_push,
-        op_kwargs={'worksheet_name': 'Push 관리'},
-        provide_context=True,
-        dag=dag
-    )
+        xcom_push_task_4 = PythonOperator(
+            task_id='xcom_push_task_4',
+            python_callable=schema_xcom_push,
+            op_kwargs={'worksheet_name': 'Push 관리'},
+            provide_context=True,
+            dag=dag
+        )
 
-    # create hive table
-    hive_create_cmd_1 = SimpleHttpOperator(
-        task_id='hive_create_cmd_1',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'create',
-            'project_name': 'gcp',
-            'table_name': '01_contactlist',
-            'schema': '{{ ti.xcom_pull(key=\'01_contactlist\') }}'
-        }),
-        headers={'Content-Type': 'application/json'}
-    )
+    with TaskGroup("create_table_group") as create_table_group:
+        # create hive table
+        hive_create_cmd_1 = SimpleHttpOperator(
+            task_id='hive_create_cmd_1',
+            method='POST',
+            endpoint='/hive_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'create',
+                'project_name': 'gcp',
+                'table_name': '01_contactlist',
+                'schema': '{{ ti.xcom_pull(key=\'01_contactlist\') }}'
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
 
-    hive_create_cmd_2 = SimpleHttpOperator(
-        task_id='hive_create_cmd_2',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'create',
-            'project_name': 'gcp',
-            'table_name': '02_contract_management',
-            'schema': '{{ ti.xcom_pull(key=\'02_contract_management\') }}'
-        }),
-        headers={'Content-Type': 'application/json'}
-    )
+        hive_create_cmd_2 = SimpleHttpOperator(
+            task_id='hive_create_cmd_2',
+            method='POST',
+            endpoint='/hive_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'create',
+                'project_name': 'gcp',
+                'table_name': '02_contract_management',
+                'schema': '{{ ti.xcom_pull(key=\'02_contract_management\') }}'
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
 
-    hive_create_cmd_3 = SimpleHttpOperator(
-        task_id='hive_create_cmd_3',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'create',
-            'project_name': 'gcp',
-            'table_name': '03_campaign_management',
-            'schema': '{{ ti.xcom_pull(key=\'03_campaign_management\') }}'
-        }),
-        headers={'Content-Type': 'application/json'}
-    )
+        hive_create_cmd_3 = SimpleHttpOperator(
+            task_id='hive_create_cmd_3',
+            method='POST',
+            endpoint='/hive_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'create',
+                'project_name': 'gcp',
+                'table_name': '03_campaign_management',
+                'schema': '{{ ti.xcom_pull(key=\'03_campaign_management\') }}'
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
 
-    hive_create_cmd_4 = SimpleHttpOperator(
-        task_id='hive_create_cmd_4',
-        method='POST',
-        endpoint='/hive_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'create',
-            'project_name': 'gcp',
-            'table_name': 'push_management',
-            'schema': '{{ ti.xcom_pull(key=\'push_management\') }}'
-        }),
-        headers={'Content-Type': 'application/json'}
-    )
+        hive_create_cmd_4 = SimpleHttpOperator(
+            task_id='hive_create_cmd_4',
+            method='POST',
+            endpoint='/hive_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'create',
+                'project_name': 'gcp',
+                'table_name': 'push_management',
+                'schema': '{{ ti.xcom_pull(key=\'push_management\') }}'
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
 
 
-    read_sheet_task_1 >> preprocessing_task_1
-    read_sheet_task_2 >> preprocessing_task_2
-    read_sheet_task_3 >> preprocessing_task_3
-    read_sheet_task_4 >> preprocessing_task_4
-    
-    [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3, preprocessing_task_4] >> hdfs_put_cmd
+    read_sheet_group >> preprocessing_group >> hdfs_put_cmd >> xcom_push_group >> create_table_group
 
-    hdfs_put_cmd >> xcom_push_task_1
-    hdfs_put_cmd >> xcom_push_task_2
-    hdfs_put_cmd >> xcom_push_task_3
-    hdfs_put_cmd >> xcom_push_task_4
+    # read_sheet_task_1 >> preprocessing_task_1
+    # read_sheet_task_2 >> preprocessing_task_2
+    # read_sheet_task_3 >> preprocessing_task_3
+    # read_sheet_task_4 >> preprocessing_task_4
 
-    xcom_push_task_1 >> hive_create_cmd_1
-    xcom_push_task_2 >> hive_create_cmd_2
-    xcom_push_task_3 >> hive_create_cmd_3
-    xcom_push_task_4 >> hive_create_cmd_4
+    # [preprocessing_task_1, preprocessing_task_2, preprocessing_task_3, preprocessing_task_4] >> hdfs_put_cmd
+
+    # hdfs_put_cmd >> xcom_push_task_1
+    # hdfs_put_cmd >> xcom_push_task_2
+    # hdfs_put_cmd >> xcom_push_task_3
+    # hdfs_put_cmd >> xcom_push_task_4
+
+    # xcom_push_task_1 >> hive_create_cmd_1
+    # xcom_push_task_2 >> hive_create_cmd_2
+    # xcom_push_task_3 >> hive_create_cmd_3
+    # xcom_push_task_4 >> hive_create_cmd_4
