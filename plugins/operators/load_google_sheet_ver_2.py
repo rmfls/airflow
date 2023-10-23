@@ -241,6 +241,9 @@ class GoogleSheetsHook(GoogleBaseHook):
                     df[col].fillna('0', inplace=True)
                     df[col] = pd.to_numeric(df[col].str.replace('[,]', '', regex=True), errors='coerce')
 
+            # 중복컬럼 이름 제거
+            self.rename_duplicated_columns(df)
+
         # parquet 파일로 저장
         df.to_parquet(save_parquet_path, index=False)
         print(f"파일 덮어씌우기: {en_worksheet_name}.parquet")
