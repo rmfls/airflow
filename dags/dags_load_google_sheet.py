@@ -76,6 +76,14 @@ with DAG(
             provide_context=True,
             dag=dag
         )
+
+        read_sheet_task_5 = PythonOperator(
+            task_id='read_sheet_task_5',
+            python_callable=download_google_sheet,
+            op_kwargs={'worksheet_name': '제안 관리'},
+            provide_context=True,
+            dag=dag
+        )
     
     with TaskGroup("preprocessing_group") as preprocessing_group:
         # 데이터 전처리 task
@@ -107,6 +115,14 @@ with DAG(
             task_id='preprocessing_task_4',
             python_callable=preprocessing_google_sheet,
             op_kwargs={'worksheet_name': 'Push 관리'},
+            provide_context=True,
+            dag=dag
+        )
+
+        preprocessing_task_5 = PythonOperator(
+            task_id='preprocessing_task_5',
+            python_callable=preprocessing_google_sheet,
+            op_kwargs={'worksheet_name': '제안 관리'},
             provide_context=True,
             dag=dag
         )
@@ -157,6 +173,14 @@ with DAG(
             task_id='xcom_push_task_4',
             python_callable=schema_xcom_push,
             op_kwargs={'worksheet_name': 'Push 관리'},
+            provide_context=True,
+            dag=dag
+        )
+
+        xcom_push_task_5 = PythonOperator(
+            task_id='xcom_push_task_5',
+            python_callable=schema_xcom_push,
+            op_kwargs={'worksheet_name': '제안 관리'},
             provide_context=True,
             dag=dag
         )
@@ -215,6 +239,20 @@ with DAG(
                 'project_name': 'gcp',
                 'table_name': 'push_management',
                 'schema': '{{ ti.xcom_pull(key=\'push_management\') }}'
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        hive_create_cmd_5 = SimpleHttpOperator(
+            task_id='hive_create_cmd_5',
+            method='POST',
+            endpoint='/hive_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'create',
+                'project_name': 'gcp',
+                'table_name': 'proposal_management',
+                'schema': '{{ ti.xcom_pull(key=\'proposal_management\') }}'
             }),
             headers={'Content-Type': 'application/json'}
         )

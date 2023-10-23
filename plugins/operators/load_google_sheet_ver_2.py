@@ -86,6 +86,24 @@ class GoogleSheetsHook(GoogleBaseHook):
         "#push": "push_price"
     }
 
+    COLUMN_NAME_MAPPING_05 = {
+        "캠페인명": "campaign_name",
+        "광고주명": "advertiser_name",
+        "업종": "industry",
+        "대행사명": "agency_name",
+        "렙사명": "rep_company_name",
+        "담당자": "manager",
+        "tel": "tel",
+        "HP": "mobile",
+        "email": "email",
+        "현재 상태": "current_status",
+        "f/u": "follow_up",
+        "상품명": "product_name",
+        "총 집행 금액": "total_execution_amount",
+        "예상 일정": "expected_schedule",
+        "예상 Target": "expected_target"
+    }
+
     def __init__(self, gcp_conn_id='google_cloud_default', project_nm='', *args, **kwargs):
         if not project_nm:
             raise ValueError("The project_nm parameter is required.")
@@ -199,14 +217,29 @@ class GoogleSheetsHook(GoogleBaseHook):
             to_rename = {col: self.COLUMN_NAME_MAPPING_04[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_04}
             df.rename(columns=to_rename, inplace=True)
 
-            # execution_amount, profit 컬럼 결측치 처리, int로 변환
+            # push 컬럼 결측치 처리, int로 변환
             for col in ['#push']:
                 if col in df.columns:
                     df[col].fillna('0', inplace=True)
                     df[col] = pd.to_numeric(df[col].str.replace('[,]', '', regex=True), errors='coerce')
 
             print(f"{worksheet_name} 워크시트 전처리 완료")
+        elif worksheet_name == '제안 관리':
+            # 데이터 전처리
+            df = df.iloc[:, 2:]  # 첫, 두 번째 열 제거
+            df.columns = df.iloc[2]  # 4번 행을 열 이름으로 사용
+            df = df.iloc[3:].reset_index(drop=True)  # 5번 행부터 시작하도록 설정, 인덱스 초기화
+            df.columns.name = None  # 컬럼 name 제거
 
+            # 이름 매핑 적용
+            to_rename = {col: self.COLUMN_NAME_MAPPING_05[col] for col in df.columns if col in self.COLUMN_NAME_MAPPING_05}
+            df.rename(columns=to_rename, inplace=True)
+
+            # total_execution_amount 컬럼 결측치 처리, int로 변환
+            for col in ['total_execution_amount']:
+                if col in df.columns:
+                    df[col].fillna('0', inplace=True)
+                    df[col] = pd.to_numeric(df[col].str.replace('[,]', '', regex=True), errors='coerce')
 
         # parquet 파일로 저장
         df.to_parquet(save_parquet_path, index=False)
