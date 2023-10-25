@@ -19,7 +19,7 @@ def fetch_data_from_trino():
         port=conn_info.port,
         user=conn_info.login,
         auth=BasicAuthentication(conn_info.login, conn_info.password),
-        http_scheme='http',
+        http_scheme='https',
         catalog='hadoop_doopey'
     )
 
@@ -38,7 +38,7 @@ def fetch_data_from_trino():
     cur.execute(query)
     store_gg = cur.fetchall()
     df = pd.DataFrame(store_gg, columns=['id', 'date', 'content', 'category_id'])
-    
+
     print(df)
 
 
