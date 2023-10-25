@@ -22,7 +22,12 @@ with DAG(
         http_conn_id='local_fast_api_conn_id',
         endpoint='/trino_query',
         data=json.dumps({
-            'query': 'select id, date (created + interval "9" hour) as ymd, content, category_id from kn_users_note',
+            'query': '''select 
+                            id, 
+                            date (created + interval "9" hour) as ymd, 
+                            content, 
+                            category_id 
+                        from kn_users_note''',
             'connection': {
                 'host': conn_info.host,
                 'port': conn_info.port,
