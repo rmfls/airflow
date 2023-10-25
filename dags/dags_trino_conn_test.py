@@ -26,7 +26,7 @@ with DAG(
                             id,
                             date (created + interval '9' hour) as ymd,
                             content,
-                            category_id
+                            cast(category_id as integer)
                         from kn_users_note''',
             'connection': {
                 'host': conn_info.host,
