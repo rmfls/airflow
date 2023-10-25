@@ -20,7 +20,8 @@ def fetch_data_from_trino():
         user=conn_info.login,
         auth=BasicAuthentication(conn_info.login, conn_info.password),
         http_scheme='https',
-        catalog='hadoop_doopey'
+        catalog='hadoop_doopey',
+        schema=conn_info.schema
     )
 
     cur = conn.cursor()
