@@ -27,6 +27,7 @@ with DAG(
                 'host': conn_info.host,
                 'port': conn_info.port,
                 'user': conn_info.login,
+                'http_scheme': 'https',
                 'password': conn_info.password,
                 'catalog': 'hadoop_doopey',
                 'schema': 'kidsnote'
