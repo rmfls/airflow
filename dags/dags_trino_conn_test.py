@@ -20,9 +20,26 @@ def fetch_data_from_trino():
         user=conn_info.login,
         auth=BasicAuthentication(conn_info.login, conn_info.password),
         http_scheme='http',
-        catalog='hadoop_doopey',
-        scheme=conn_info.schema
+        catalog='hadoop_doopey'
     )
+
+    cur = conn.cursor()
+    
+    query = '''
+        select
+        id,
+        date (created + interval '9' hour) as ymd,
+        content,
+        category_id
+        from
+        kn_users_note
+    '''
+    
+    cur.execute(query)
+    store_gg = cur.fetchall()
+    df = pd.DataFrame(store_gg, columns=['id', 'date', 'content', 'category_id'])
+    
+    print(df)
 
 
 
