@@ -19,7 +19,7 @@ with DAG(
     load_from_trino_task = SimpleHttpOperator(
         task_id='load_from_trino_task',
         method='POST',
-        http_conn_id='fastapi_conn',
+        http_conn_id='local_fast_api_conn_id',
         endpoint='/trino_query',
         data=json.dumps({
             'query': 'select * from schema.table_name',
