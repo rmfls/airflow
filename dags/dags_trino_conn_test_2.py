@@ -3,6 +3,8 @@ from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.http.operators.http import SimpleHttpOperator
 from airflow.models import Variable
+from airflow.utils.task_group import TaskGroup
+
 
 
 import pendulum
@@ -12,7 +14,6 @@ import json
 from operators.fetch_data_from_trino import fetch_data_from_trino
 from operators.data_processing import process_data
 from operators.hive_schema import generate_hive_schema_from_parquet
-
 from common.export_to_parquet import export_to_parquet
 
 
@@ -67,30 +68,31 @@ with DAG(
         dag=dag
     )
 
-    hdfs_put_task = SimpleHttpOperator(
-        task_id='hdfs_put_task',
-        method='POST',
-        endpoint='/hdfs_cmd',
-        http_conn_id='local_fast_api_conn_id',
-        data=json.dumps({
-            'option': 'put',
-            'hadoop_base_path': Variable.get('hadoop_base_path'),
-            'project_name': 'pr_morpheme',
-            'local_path': '/Users/green/airflow/file_export/pr_morpheme',
-            'user': 'green'
-        }),
-        headers={'Content-Type': 'application/json'}
-    )
+    with TaskGroup("hdfs_cmd_and_xcom_push_group") as hdfs_cmd_and_xcom_push_group:
+        hdfs_put_task = SimpleHttpOperator(
+            task_id='hdfs_put_task',
+            method='POST',
+            endpoint='/hdfs_cmd',
+            http_conn_id='local_fast_api_conn_id',
+            data=json.dumps({
+                'option': 'put',
+                'hadoop_base_path': Variable.get('hadoop_base_path'),
+                'project_name': 'pr_morpheme',
+                'local_path': '/Users/green/airflow/file_export/pr_morpheme',
+                'user': 'green'
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
 
-    xcom_push_schema_task = PythonOperator(
-        task_id='xcom_push_schema_task',
-        python_callable=generate_hive_schema_from_parquet,
-        op_kwargs={
-            'parquet_path': './file_export/pr_morpheme/pr_morpheme/pr_morpheme.parquet'
-        },
-        provide_context=True,
-        dag=dag
-    )
+        xcom_push_schema_task = PythonOperator(
+            task_id='xcom_push_schema_task',
+            python_callable=generate_hive_schema_from_parquet,
+            op_kwargs={
+                'parquet_path': './file_export/pr_morpheme/pr_morpheme/pr_morpheme.parquet'
+            },
+            provide_context=True,
+            dag=dag
+        )
 
     hive_create_cmd = SimpleHttpOperator(
         task_id='hive_create_cmd',
