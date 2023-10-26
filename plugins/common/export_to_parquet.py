@@ -11,7 +11,7 @@ def export_to_parquet(task_id_to_pull, project_nm, **kwargs):
         os.makedirs(output_path)
 
     # parquet 파일로 저장
-    file_path = os.path.join(output_path, f"{project_nm}.parquet")
+    file_path = os.path.join(output_path, project_nm, f"{project_nm}.parquet")
     df.to_parquet(file_path)
 
     print(f"Data saved to {file_path}")
