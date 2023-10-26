@@ -103,7 +103,7 @@ with DAG(
             'option': 'create',
             'project_name': 'pr_morpheme',
             'table_name': 'pr_morpheme',
-            'schema': '{{ ti.xcom_pull(task_ids=\'xcom_push_schema_task\')}}'
+            'schema': '{{ ti.xcom_pull(task_ids=\'hdfs_cmd_and_xcom_push_group.xcom_push_schema_task\')}}'
         }),
         headers={'Content-Type': 'application/json'}
     )
