@@ -4,6 +4,7 @@ from airflow.operators.python import PythonOperator
 import pendulum
 
 from operators.fetch_data_from_trino import fetch_data_from_trino
+from operators.data_processing import process_data
 
 
 # 쿼리
@@ -28,10 +29,23 @@ with DAG(
 ) as dag:
     
     fetch_data_task = PythonOperator(
-        task_id='fetch_data_from_trino',
+        task_id='fetch_data_task',
         python_callable=fetch_data_from_trino,
         op_kwargs={'query': query, 'columns': columns},
         dag=dag,
     )
 
-    fetch_data_task
+    process_data_task = PythonOperator(
+        task_id='process_data_task',
+        python_callable=process_data,
+        op_kwargs={
+            'task_id_to_pull': 'fetch_data_task',
+            'processing_type': 'uppercase'
+        },
+        provide_context=True,
+        dag=dag,
+
+    )
+
+
+    fetch_data_task >> process_data_task
