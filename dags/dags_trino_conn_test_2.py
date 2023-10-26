@@ -5,6 +5,7 @@ import pendulum
 
 from operators.fetch_data_from_trino import fetch_data_from_trino
 from operators.data_processing import process_data
+from common.export_to_parquet import export_to_parquet
 
 
 # 쿼리
@@ -47,5 +48,16 @@ with DAG(
 
     )
 
+    save_to_parquet_task = PythonOperator(
+        task_id='save_to_parquet_task',
+        python_callable=export_to_parquet,
+        op_kwargs={
+            'task_id_to_pull': 'process_data_task',
+            'project_nm': 'pr_morpheme',
+        },
+        provide_context=True,
+        dag=dag
+    )
 
-    fetch_data_task >> process_data_task
+
+    fetch_data_task >> process_data_task >> save_to_parquet_task

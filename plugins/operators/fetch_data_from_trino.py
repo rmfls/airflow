@@ -22,4 +22,6 @@ def fetch_data_from_trino(query, columns):
     store_gg = cur.fetchall()
     df = pd.DataFrame(store_gg, columns=columns)
     
+    print(df)
+
     return df  # xcom으로 데이터 전달
