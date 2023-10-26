@@ -86,7 +86,7 @@ with DAG(
         task_id='xcom_push_schema_task',
         python_callable=generate_hive_schema_from_parquet,
         op_kwargs={
-            'parquet_path': './file_export/pr_morpheme/pr_morpheme.parquet'
+            'parquet_path': './file_export/pr_morpheme/pr_morpheme/pr_morpheme.parquet'
         },
         provide_context=True,
         dag=dag
