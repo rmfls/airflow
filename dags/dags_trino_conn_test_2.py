@@ -101,7 +101,7 @@ with DAG(
             'option': 'create',
             'project_name': 'pr_morpheme',
             'table_name': 'pr_morpheme',
-            'schema': '{{ ti.xcom_pull(task_id=\'xcom_push_schema_task\')}}'
+            'schema': '{{ ti.xcom_pull(task_ids=\'xcom_push_schema_task\')}}'
         }),
         headers={'Content-Type': 'application/json'}
     )
