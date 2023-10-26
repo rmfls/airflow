@@ -5,6 +5,8 @@ import pendulum
 
 from operators.fetch_data_from_trino import fetch_data_from_trino
 from operators.data_processing import process_data
+from operators.hive_schema import generate_hive_schema_from_parquet
+
 from common.export_to_parquet import export_to_parquet
 
 
@@ -59,5 +61,15 @@ with DAG(
         dag=dag
     )
 
+    xcom_push_schema_task = PythonOperator(
+        task_id='xcom_push_schema_task',
+        python_callable=generate_hive_schema_from_parquet,
+        op_kwargs={
+            'parquet_path': './file_export/pr_morpheme/pr_morpheme.parquet'
+        },
+        provide_context=True,
+        dag=dag
+    )
 
-    fetch_data_task >> process_data_task >> save_to_parquet_task
+
+    fetch_data_task >> process_data_task >> save_to_parquet_task >> xcom_push_schema_task
