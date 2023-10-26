@@ -1,7 +1,13 @@
 from airflow.hooks.base import BaseHook
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.providers.http.operators.http import SimpleHttpOperator
+from airflow.models import Variable
+
+
 import pendulum
+import json
+
 
 from operators.fetch_data_from_trino import fetch_data_from_trino
 from operators.data_processing import process_data
@@ -71,5 +77,20 @@ with DAG(
         dag=dag
     )
 
+    hdfs_put_task = SimpleHttpOperator(
+        task_id='hdfs_put_task',
+        method='POST',
+        endpoint='/hdfs_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'put',
+            'hadoop_base_path': Variable.get('hadoop_base_path'),
+            'project_name': 'pr_morpheme',
+            'local_path': '/Users/green/airflow/file_export/pr_morpheme',
+            'user': 'green'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
 
-    fetch_data_task >> process_data_task >> save_to_parquet_task >> xcom_push_schema_task
+
+    fetch_data_task >> process_data_task >> save_to_parquet_task >> [xcom_push_schema_task, hdfs_put_task]
