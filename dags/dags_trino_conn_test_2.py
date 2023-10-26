@@ -67,16 +67,6 @@ with DAG(
         dag=dag
     )
 
-    xcom_push_schema_task = PythonOperator(
-        task_id='xcom_push_schema_task',
-        python_callable=generate_hive_schema_from_parquet,
-        op_kwargs={
-            'parquet_path': './file_export/pr_morpheme/pr_morpheme.parquet'
-        },
-        provide_context=True,
-        dag=dag
-    )
-
     hdfs_put_task = SimpleHttpOperator(
         task_id='hdfs_put_task',
         method='POST',
@@ -92,5 +82,30 @@ with DAG(
         headers={'Content-Type': 'application/json'}
     )
 
+    xcom_push_schema_task = PythonOperator(
+        task_id='xcom_push_schema_task',
+        python_callable=generate_hive_schema_from_parquet,
+        op_kwargs={
+            'parquet_path': './file_export/pr_morpheme/pr_morpheme.parquet'
+        },
+        provide_context=True,
+        dag=dag
+    )
 
-    fetch_data_task >> process_data_task >> save_to_parquet_task >> [xcom_push_schema_task, hdfs_put_task]
+    hive_create_cmd = SimpleHttpOperator(
+        task_id='hive_create_cmd',
+        method='POST',
+        endpoint='/hive_cmd',
+        http_conn_id='local_fast_api_conn_id',
+        data=json.dumps({
+            'option': 'create',
+            'project_name': 'pr_morpheme',
+            'table_name': 'pr_morpheme',
+            'schema': '{{ ti.xcom_pull(task_id=\'xcom_push_schema_task\')}}'
+        }),
+        headers={'Content-Type': 'application/json'}
+    )
+
+
+    fetch_data_task >> process_data_task >> save_to_parquet_task 
+    save_to_parquet_task >> [xcom_push_schema_task, hdfs_put_task] >> hive_create_cmd
